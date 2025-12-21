@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import * as JSZip from 'jszip';
+import { default as JSZip } from 'jszip';
 import { User, ExpenseEntry, KmEntry } from '../types';
 
 interface ExportProps {
@@ -262,7 +262,7 @@ const Export: React.FC<ExportProps> = ({ user }) => {
     try {
       setStatus(`Preparando ZIP (${entriesWithPhoto.length})…`);
 
-      const zip = new (JSZip as any)();
+      const zip = new JSZip();
 
       const safe = (s: string) => String(s || '').replace(/[^a-z0-9-_]/gi, '_').toLowerCase();
 
