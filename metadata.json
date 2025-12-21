@@ -1,0 +1,7 @@
+{
+  "name": "Gastos 2N",
+  "description": "A modern, professional B2B tech expense and mileage management application with OCR capabilities and monthly summary reporting.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
