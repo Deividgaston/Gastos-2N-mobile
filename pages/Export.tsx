@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import JSZip from 'jszip';
 import { User, ExpenseEntry, KmEntry } from '../types';
 
 interface ExportProps {
@@ -126,7 +127,6 @@ const Export: React.FC<ExportProps> = ({ user }) => {
         return;
       }
 
-      // plantilla en /public -> se sirve desde BASE_URL
       const templateUrl = `${import.meta.env.BASE_URL}plantilla-2n.xlsx`;
       const resp = await fetch(templateUrl, { cache: 'no-store' });
       if (!resp.ok) throw new Error(`No se puede cargar plantilla-2n.xlsx (HTTP ${resp.status})`);
@@ -137,7 +137,6 @@ const Export: React.FC<ExportProps> = ({ user }) => {
       const sheetName = wb.SheetNames[0];
       const ws = wb.Sheets[sheetName];
 
-      // Cabecera fija (como el proyecto viejo)
       const PRENOM = 'david';
       const NOM = 'gaston';
       const COST_CENTER = 'iberia team';
@@ -158,7 +157,7 @@ const Export: React.FC<ExportProps> = ({ user }) => {
         const r = startRow + idx;
 
         const d: Date = e.dateJs instanceof Date ? e.dateJs : new Date((e as any).dateJs || (e as any).date);
-        const iso = d.toISOString().slice(0, 10); // YYYY-MM-DD
+        const iso = d.toISOString().slice(0, 10);
         const [yyyy, mm, dd] = iso.split('-');
 
         function setCell(col: string, val: any, typeOverride?: string) {
@@ -252,40 +251,66 @@ const Export: React.FC<ExportProps> = ({ user }) => {
     }
   };
 
-  /* =================== DOWNLOAD TICKET PHOTOS =================== */
+  /* =================== DOWNLOAD TICKET PHOTOS (ZIP) =================== */
   const exportFotosTickets = async () => {
-    const entriesWithPhoto = entries.filter((e) => (e as any).photoURL);
+    const entriesWithPhoto = entries.filter((e: any) => e?.photoURL);
     if (!entriesWithPhoto.length) {
       alert('No hay tickets con foto en este mes.');
       return;
     }
 
     try {
-      setStatus('Lanzando descargas de fotos…');
+      setStatus(`Preparando ZIP (${entriesWithPhoto.length})…`);
 
-      entriesWithPhoto.forEach((e, i) => {
-        const url = (e as any).photoURL;
-        if (!url) return;
+      const zip = new JSZip();
 
-        const d: Date = e.dateJs instanceof Date ? e.dateJs : new Date((e as any).dateJs || (e as any).date);
+      const safe = (s: string) => String(s || '').replace(/[^a-z0-9-_]/gi, '_').toLowerCase();
+
+      // secuencial para no saturar / evitar bloqueos
+      for (let i = 0; i < entriesWithPhoto.length; i++) {
+        const e: any = entriesWithPhoto[i];
+        const url = e.photoURL;
+        if (!url) continue;
+
+        const d: Date = e.dateJs instanceof Date ? e.dateJs : new Date(e.dateJs || e.date);
         const iso = d.toISOString().slice(0, 10);
 
-        const safeProv = String(e.provider || 'ticket').replace(/[^a-z0-9-_]/gi, '_').toLowerCase();
-        const fname = `ticket_${iso}_${safeProv}_${i}.jpg`;
+        const prov = safe(e.provider || 'ticket');
 
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = fname;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-      });
+        // intenta inferir extensión (si no, jpg)
+        const urlNoQuery = String(url).split('?')[0];
+        const extMatch = urlNoQuery.match(/\.([a-z0-9]{3,4})$/i);
+        const ext = extMatch ? extMatch[1].toLowerCase() : 'jpg';
 
-      setStatus('Descarga de fotos lanzada ✅ (el navegador puede pedir confirmación).');
+        const fname = `ticket_${iso}_${prov}_${i + 1}.${ext}`;
+
+        setStatus(`Descargando ${i + 1}/${entriesWithPhoto.length}…`);
+
+        const resp = await fetch(url);
+        if (!resp.ok) throw new Error(`No se pudo descargar ${fname} (HTTP ${resp.status})`);
+
+        const blob = await resp.blob();
+        zip.file(fname, blob);
+      }
+
+      setStatus('Generando ZIP…');
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(zipBlob);
+      a.download = `tickets_${month || 'month'}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+
+      // limpia el objectURL
+      setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+
+      setStatus('ZIP descargado ✅');
     } catch (e: any) {
       console.error(e);
-      alert('Error al lanzar la descarga de fotos: ' + (e?.message || e));
-      setStatus('Error al descargar fotos.');
+      alert('Error al descargar tickets: ' + (e?.message || e));
+      setStatus('Error al descargar tickets.');
     }
   };
 
