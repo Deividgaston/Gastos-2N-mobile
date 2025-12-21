@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import JSZip from 'jszip';
+import * as JSZip from 'jszip';
 import { User, ExpenseEntry, KmEntry } from '../types';
 
 interface ExportProps {
@@ -262,11 +262,10 @@ const Export: React.FC<ExportProps> = ({ user }) => {
     try {
       setStatus(`Preparando ZIP (${entriesWithPhoto.length})…`);
 
-      const zip = new JSZip();
+      const zip = new (JSZip as any)();
 
       const safe = (s: string) => String(s || '').replace(/[^a-z0-9-_]/gi, '_').toLowerCase();
 
-      // secuencial para no saturar / evitar bloqueos
       for (let i = 0; i < entriesWithPhoto.length; i++) {
         const e: any = entriesWithPhoto[i];
         const url = e.photoURL;
@@ -277,7 +276,6 @@ const Export: React.FC<ExportProps> = ({ user }) => {
 
         const prov = safe(e.provider || 'ticket');
 
-        // intenta inferir extensión (si no, jpg)
         const urlNoQuery = String(url).split('?')[0];
         const extMatch = urlNoQuery.match(/\.([a-z0-9]{3,4})$/i);
         const ext = extMatch ? extMatch[1].toLowerCase() : 'jpg';
@@ -286,7 +284,7 @@ const Export: React.FC<ExportProps> = ({ user }) => {
 
         setStatus(`Descargando ${i + 1}/${entriesWithPhoto.length}…`);
 
-        const resp = await fetch(url);
+        const resp = await fetch(url, { mode: 'cors' });
         if (!resp.ok) throw new Error(`No se pudo descargar ${fname} (HTTP ${resp.status})`);
 
         const blob = await resp.blob();
@@ -296,15 +294,15 @@ const Export: React.FC<ExportProps> = ({ user }) => {
       setStatus('Generando ZIP…');
       const zipBlob = await zip.generateAsync({ type: 'blob' });
 
+      const urlZip = URL.createObjectURL(zipBlob);
       const a = document.createElement('a');
-      a.href = URL.createObjectURL(zipBlob);
+      a.href = urlZip;
       a.download = `tickets_${month || 'month'}.zip`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
 
-      // limpia el objectURL
-      setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+      setTimeout(() => URL.revokeObjectURL(urlZip), 2000);
 
       setStatus('ZIP descargado ✅');
     } catch (e: any) {
