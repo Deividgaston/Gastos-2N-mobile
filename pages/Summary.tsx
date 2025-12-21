@@ -79,7 +79,7 @@ const buildPdf = async () => {
     ];
   });
 
-  doc.autoTable({
+  (doc as any).autoTable({
     startY: 66,
     head: [['Date','Provider','Category','Paid with','Notes','Amount']],
     body: rows,
