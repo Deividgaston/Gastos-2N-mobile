@@ -23,7 +23,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          # ❌ NO cache mientras no haya lockfile
 
       - run: npm install
       - run: npm run build
