@@ -251,64 +251,40 @@ const Export: React.FC<ExportProps> = ({ user }) => {
     }
   };
 
-  /* =================== DOWNLOAD TICKET PHOTOS (ZIP) =================== */
+  /* =================== DOWNLOAD TICKET PHOTOS (OPEN AUTH URLS) ===================
+     Cambio mínimo: dejar de hacer fetch() (CORS) y abrir los downloadURL autenticados
+     desde Firebase Storage usando photoPath.
+  */
   const exportFotosTickets = async () => {
-    const entriesWithPhoto = entries.filter((e: any) => e?.photoURL);
+    const entriesWithPhoto = entries.filter((e: any) => e?.photoPath);
     if (!entriesWithPhoto.length) {
       alert('No hay tickets con foto en este mes.');
       return;
     }
 
+    if (!user) {
+      alert('Debes estar autenticado.');
+      return;
+    }
+
     try {
-      setStatus(`Preparando ZIP (${entriesWithPhoto.length})…`);
+      setStatus(`Abriendo ${entriesWithPhoto.length} tickets…`);
 
-      const zip = new JSZip();
+      const storage = (window as any).firebase.storage();
+      let opened = 0;
 
-      const safe = (s: string) => String(s || '').replace(/[^a-z0-9-_]/gi, '_').toLowerCase();
-
-      for (let i = 0; i < entriesWithPhoto.length; i++) {
-        const e: any = entriesWithPhoto[i];
-        const url = e.photoURL;
-        if (!url) continue;
-
-        const d: Date = e.dateJs instanceof Date ? e.dateJs : new Date(e.dateJs || e.date);
-        const iso = d.toISOString().slice(0, 10);
-
-        const prov = safe(e.provider || 'ticket');
-
-        const urlNoQuery = String(url).split('?')[0];
-        const extMatch = urlNoQuery.match(/\.([a-z0-9]{3,4})$/i);
-        const ext = extMatch ? extMatch[1].toLowerCase() : 'jpg';
-
-        const fname = `ticket_${iso}_${prov}_${i + 1}.${ext}`;
-
-        setStatus(`Descargando ${i + 1}/${entriesWithPhoto.length}…`);
-
-        const resp = await fetch(url, { mode: 'cors' });
-        if (!resp.ok) throw new Error(`No se pudo descargar ${fname} (HTTP ${resp.status})`);
-
-        const blob = await resp.blob();
-        zip.file(fname, blob);
+      for (const e of entriesWithPhoto as any[]) {
+        const ref = storage.ref().child(e.photoPath);
+        const url = await ref.getDownloadURL();
+        const w = window.open(url, '_blank', 'noopener,noreferrer');
+        if (w) opened++;
       }
 
-      setStatus('Generando ZIP…');
-      const zipBlob = await zip.generateAsync({ type: 'blob' });
-
-      const urlZip = URL.createObjectURL(zipBlob);
-      const a = document.createElement('a');
-      a.href = urlZip;
-      a.download = `tickets_${month || 'month'}.zip`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-
-      setTimeout(() => URL.revokeObjectURL(urlZip), 2000);
-
-      setStatus('ZIP descargado ✅');
+      setStatus(opened ? `Listo ✅ Se abrieron ${opened} tickets.` : 'Bloqueado ❌ Activa popups para este sitio.');
     } catch (e: any) {
       console.error(e);
-      alert('Error al descargar tickets: ' + (e?.message || e));
-      setStatus('Error al descargar tickets.');
+      alert('Error al abrir tickets: ' + (e?.message || e));
+      setStatus('Error al abrir tickets.');
     }
   };
 
