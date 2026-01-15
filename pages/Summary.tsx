@@ -544,8 +544,8 @@ const Summary: React.FC<SummaryProps> = ({ user, lang }) => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
           <StatBox label={i18n.total} value={`${stats.total.toFixed(2)}€`} icon={<Wallet size={16} />} color="blue" />
           <StatBox label={i18n.personal} value={`${stats.personal.toFixed(2)}€`} icon={<UserCheck size={16} />} color="slate" />
-          <StatBox label="KM Empresa" value={`${stats.kmEmp.toFixed(1)}k`} icon={<Briefcase size={16} />} color="slate" />
-          <StatBox label={i18n.km} value={`${stats.kmPer.toFixed(1)}k`} icon={<HomeIcon size={16} />} color="slate" />
+          <StatBox label="KM Empresa" value={`${stats.kmEmp.toFixed(1)} km`} icon={<Briefcase size={16} />} color="slate" />
+          <StatBox label={i18n.km} value={`${stats.kmPer.toFixed(1)} km`} icon={<HomeIcon size={16} />} color="slate" />
         </div>
       </section>
 
