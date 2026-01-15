@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { HashRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
 import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
 import { auth, db } from './firebase-init';
-import { collection, query, where, getDocs, limit } from 'firebase/firestore';
+import { collection, query, where, getDocs, limit, addDoc } from 'firebase/firestore';
 import Home from './pages/Home';
 import Mileage from './pages/Mileage';
 import Summary from './pages/Summary';
@@ -22,6 +22,23 @@ const App: React.FC = () => {
       if (u && u.email) {
         // Check whitelist
         try {
+          const qAll = query(collection(db, 'whitelisted_users'), limit(1));
+          const allSnap = await getDocs(qAll);
+
+          if (allSnap.empty) {
+            // BOOTSTRAP: First user becomes Admin
+            await addDoc(collection(db, 'whitelisted_users'), {
+              email: u.email.toLowerCase(),
+              isAdmin: true,
+              isWhitelisted: true,
+              createdAt: new Date()
+            });
+            setUser({ uid: u.uid, email: u.email, isAdmin: true, isWhitelisted: true });
+            setIsAuthorized(true);
+            setLoading(false); // Set loading to false here as well
+            return;
+          }
+
           const q = query(
             collection(db, 'whitelisted_users'),
             where('email', '==', u.email.toLowerCase()),
