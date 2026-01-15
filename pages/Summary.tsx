@@ -586,10 +586,10 @@ const Summary: React.FC<SummaryProps> = ({ user, lang }) => {
       </section>
 
       {/* EXPORT ACTIONS GRID */}
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <ActionCard title="Descargar PDF" desc="Reporte visual detallado para imprimir o compartir rápido." icon={<Download />} onAction={buildPdf} color="blue" />
-        <ActionCard title="Exportar Excel" desc="Plantilla oficial 2N lista para contabilidad." icon={<FileSpreadsheet />} onAction={exportExcel} loading={isExporting === 'excel'} />
-        <ActionCard title="Tickets (ZIP)" desc="Descargar todas las fotos capturadas este mes." icon={<Archive />} onAction={exportZip} loading={isExporting === 'zip'} />
+      <section className="grid grid-cols-3 gap-3">
+        <ActionCard title="PDF" desc="Descargar" icon={<Download size={16} />} onAction={buildPdf} color="blue" compact />
+        <ActionCard title="Excel" desc="Exportar" icon={<FileSpreadsheet size={16} />} onAction={exportExcel} loading={isExporting === 'excel'} compact />
+        <ActionCard title="ZIP" desc="Tickets" icon={<Archive size={16} />} onAction={exportZip} loading={isExporting === 'zip'} compact />
       </section>
 
       {/* SPLIT VIEW - DETAILS */}
@@ -691,18 +691,18 @@ const StatBox = ({ label, value, icon, color }: any) => (
   </div>
 );
 
-const ActionCard = ({ title, desc, icon, onAction, loading, color }: any) => (
+const ActionCard = ({ title, desc, icon, onAction, color, loading, compact }: any) => (
   <button
     onClick={onAction}
     disabled={loading}
-    className={`p-8 rounded-[2.5rem] text-left transition-all active:scale-[0.98] group flex flex-col justify-between h-full ${color === 'blue' ? 'bg-blue-600 text-white shadow-xl shadow-blue-500/20' : 'bg-white border border-slate-100 shadow-xl'}`}
+    className={`premium-card p-3 md:p-6 text-left hover:border-blue-300 transition-all active:scale-95 group w-full ${loading ? 'opacity-70' : ''}`}
   >
-    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-8 transition-transform group-hover:scale-110 ${color === 'blue' ? 'bg-white/20' : 'bg-slate-50 text-blue-600'}`}>
-      {loading ? <Loader2 className="animate-spin" /> : React.cloneElement(icon as React.ReactElement, { size: 28 })}
+    <div className={`w-8 h-8 md:w-10 md:h-10 rounded-xl ${color === 'blue' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 group-hover:bg-blue-600 group-hover:text-white'} flex items-center justify-center mb-2 md:mb-4 transition-colors`}>
+      {loading ? <Loader2 className="animate-spin" size={16} /> : icon}
     </div>
     <div>
-      <h4 className="text-xl font-black mb-2 tracking-tight">{title}</h4>
-      <p className={`text-xs font-medium leading-relaxed ${color === 'blue' ? 'text-blue-100' : 'text-slate-500'}`}>{desc}</p>
+      <h3 className="font-black text-slate-800 text-xs md:text-sm">{title}</h3>
+      {!compact && <p className="text-[10px] font-medium text-slate-400 mt-1 leading-snug">{desc}</p>}
     </div>
   </button>
 );

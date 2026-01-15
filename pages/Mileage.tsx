@@ -219,7 +219,7 @@ const Mileage: React.FC<MileageProps> = ({ user, lang }) => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
                 <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">{t.consumption}</label>
                 <div className="relative">
@@ -233,16 +233,15 @@ const Mileage: React.FC<MileageProps> = ({ user, lang }) => {
                   />
                 </div>
               </div>
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">{t.history}</label>
-              <textarea
-                rows={2}
-                value={formData.notes}
-                onChange={e => setFormData({ ...formData, notes: e.target.value })}
-                className="input-premium resize-none text-sm py-2"
-              ></textarea>
+              <div className="space-y-1">
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">{t.history}</label>
+                <textarea
+                  rows={1}
+                  value={formData.notes}
+                  onChange={e => setFormData({ ...formData, notes: e.target.value })}
+                  className="input-premium resize-none text-sm py-2"
+                ></textarea>
+              </div>
             </div>
 
             <div className="bg-slate-900 rounded-2xl p-5 text-white relative overflow-hidden shadow-xl border-b-4 border-blue-600">
