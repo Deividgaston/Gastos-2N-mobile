@@ -51,7 +51,11 @@ const App: React.FC = () => {
   useEffect(() => {
     const checkAuthorization = async () => {
       if (!user || !user.email) {
-        console.log("No user or email yet, skipping auth check");
+        return;
+      }
+
+      // If we already checked and have the flags, don't check again
+      if (user.isAdmin !== undefined && user.isWhitelisted !== undefined) {
         return;
       }
 
@@ -60,7 +64,7 @@ const App: React.FC = () => {
         // --- EMERGENCY BYPASS FOR OWNER ---
         if (user.email.toLowerCase() === 'gastonortigosa@gmail.com') {
           console.log("Owner bypass triggered");
-          setUser(prev => prev ? { ...prev, isAdmin: true, isWhitelisted: true } : null);
+          setUser(prev => (prev && !prev.isAdmin) ? { ...prev, isAdmin: true, isWhitelisted: true } : prev);
           setIsAuthorized(true);
           setLoading(false);
           return;
@@ -69,11 +73,9 @@ const App: React.FC = () => {
         // 1. Check if ANY user exists (Bootstrap check)
         const qAll = query(collection(db, 'whitelisted_users'), limit(1));
         const allSnap = await getDocs(qAll);
-        console.log("Collection empty check:", allSnap.empty);
 
         if (allSnap.empty) {
           console.log("Bootstrapping first user...");
-          // Initialize first user as admin
           await addDoc(collection(db, 'whitelisted_users'), {
             email: user.email.toLowerCase(),
             isAdmin: true,
@@ -87,14 +89,12 @@ const App: React.FC = () => {
         }
 
         // 2. Check current user
-        console.log("Querying whitelist for current user...");
         const q = query(
           collection(db, 'whitelisted_users'),
           where('email', '==', user.email.toLowerCase()),
           limit(1)
         );
         const snap = await getDocs(q);
-        console.log("Whitelist query result:", !snap.empty);
 
         if (!snap.empty) {
           const data = snap.docs[0].data();
@@ -109,9 +109,6 @@ const App: React.FC = () => {
         }
       } catch (err: any) {
         console.error("Auth check error in App.tsx:", err);
-        if (err.code === 'permission-denied') {
-          console.warn("Permission denied. Check rules for 'whitelisted_users'.");
-        }
         setIsAuthorized(false);
       } finally {
         setLoading(false);
