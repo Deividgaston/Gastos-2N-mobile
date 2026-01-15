@@ -183,8 +183,8 @@ const Summary: React.FC<SummaryProps> = ({ user, lang }) => {
 
       // Forced English Strings
       const L = {
-        title: "2N Expenses - Monthly Summary",
-        monthLabel: "Month:",
+        title: "Expenses - Monthly Summary",
+        monthLabel: "Reporting Period:",
         expSum: "Expenses summary",
         milSum: "Mileage summary",
         totalExp: "Total expenses:",
@@ -207,40 +207,45 @@ const Summary: React.FC<SummaryProps> = ({ user, lang }) => {
 
       const logoBase64 = await getLogoBase64();
       if (logoBase64) {
-        doc.addImage(logoBase64, 'PNG', 175, 12, 18, 18);
+        // Logo at top left
+        doc.addImage(logoBase64, 'PNG', 14, 10, 24, 24);
       }
 
       // Header
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(26); doc.setTextColor(15, 23, 42); // slate-900
-      doc.text(L.title, 14, 25);
+      doc.setFontSize(28); doc.setTextColor(30, 41, 59); // slate-800
+      doc.text(L.title, 42, 22);
 
       doc.setFont("helvetica", "normal");
-      doc.setFontSize(12); doc.setTextColor(100, 116, 139); // slate-500
-      doc.text(`${L.monthLabel} ${month}`, 14, 35);
+      doc.setFontSize(11); doc.setTextColor(148, 163, 184); // slate-400
+      doc.text(`${L.monthLabel} ${month}`, 42, 30);
 
       // --- Summary Cards Section ---
       const cardHeight = 38;
       const cardWidth = 88;
-      const cardY = 45;
+      const cardY = 48;
 
       // Card Style Helper
-      const drawCard = (x: number, y: number, title: string, lines: string[]) => {
+      const drawCard = (x: number, y: number, title: string, lines: string[], accentColor: [number, number, number]) => {
         // Shadow simulation
-        doc.setDrawColor(241, 245, 249); doc.setFillColor(241, 245, 249);
-        (doc as any).roundedRect(x + 1, y + 1, cardWidth, cardHeight, 4, 4, "F");
+        doc.setDrawColor(248, 250, 252); doc.setFillColor(248, 250, 252);
+        (doc as any).roundedRect(x + 1, y + 1, cardWidth, cardHeight, 5, 5, "F");
 
         // Main Card
         doc.setDrawColor(226, 232, 240); doc.setFillColor(255, 255, 255);
-        (doc as any).roundedRect(x, y, cardWidth, cardHeight, 4, 4, "FD");
+        (doc as any).roundedRect(x, y, cardWidth, cardHeight, 5, 5, "FD");
+
+        // Accent bar
+        doc.setFillColor(accentColor[0], accentColor[1], accentColor[2]);
+        (doc as any).roundedRect(x + 2, y + 4, 3, 10, 1, 1, "F");
 
         // Content
-        doc.setTextColor(15, 23, 42); doc.setFontSize(11); doc.setFont("helvetica", "bold");
-        doc.text(title, x + 6, y + 10);
+        doc.setTextColor(30, 41, 59); doc.setFontSize(11); doc.setFont("helvetica", "bold");
+        doc.text(title, x + 8, y + 11);
 
-        doc.setFont("helvetica", "normal"); doc.setFontSize(10);
+        doc.setFont("helvetica", "medium"); doc.setFontSize(10); doc.setTextColor(71, 85, 105);
         lines.forEach((line, idx) => {
-          doc.text(line, x + 6, y + 18 + (idx * 7));
+          doc.text(line, x + 8, y + 19 + (idx * 7));
         });
       };
 
@@ -248,18 +253,18 @@ const Summary: React.FC<SummaryProps> = ({ user, lang }) => {
         `${L.totalExp} ${stats.total.toFixed(2)} €`,
         `${L.paidMe} ${stats.personal.toFixed(2)} €`,
         `${L.compOwes} ${companyOwes.toFixed(2)} €`
-      ]);
+      ], [37, 99, 235]); // blue-600
 
       drawCard(108, cardY, L.milSum, [
         `${L.compMil} ${stats.kmEmp.toFixed(1)} km`,
         `${L.persMil} ${stats.kmPer.toFixed(1)} km`,
         `${L.persCost} ${stats.kmCostPer.toFixed(2)} €`
-      ]);
+      ], [15, 23, 42]); // slate-900
 
       // --- Expenses Table ---
       (doc as any).autoTable({
-        startY: 95,
-        head: [[L.hDate, L.hProvider, L.hCat, L.hPaid, L.hNotes, L.hAmt]],
+        startY: 100,
+        head: [[L.hDate, L.hProvider, L.hCat, L.hPaid.toUpperCase(), L.hNotes, L.hAmt]],
         body: entries.map(e => [
           e.dateJs?.toISOString().slice(0, 10),
           e.provider,
@@ -268,8 +273,8 @@ const Summary: React.FC<SummaryProps> = ({ user, lang }) => {
           e.notes || "-",
           Number(e.amount).toFixed(2)
         ]),
-        headStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255], fontStyle: "bold", halign: 'left' },
-        bodyStyles: { textColor: [51, 65, 85] },
+        headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: "bold" },
+        bodyStyles: { textColor: [51, 65, 85], cellPadding: 4 },
         alternateRowStyles: { fillColor: [248, 250, 252] },
         styles: { fontSize: 9, font: "helvetica", cellPadding: 3 },
         columnStyles: { 5: { halign: 'right', fontStyle: 'bold' } }
@@ -318,8 +323,9 @@ const Summary: React.FC<SummaryProps> = ({ user, lang }) => {
 
       // Forced English layout
       const dataRows = [
-        ["SYSTEM: 2N EXPENSES - MONTHLY SUMMARY"],
-        [`Report Period: ${month}`],
+        ["EXPENSES & MILEAGE LOG - MONTHLY REIMBURSEMENT"],
+        [`Period: ${month}`],
+        [`Generated by 2N Expenses System`],
         [],
         ["SUMMARY SECTION"],
         ["Metric", "Value", "Unit"],
