@@ -421,32 +421,50 @@ const Summary: React.FC<SummaryProps> = ({ user, lang }) => {
   };
 
   const exportZip = async () => {
-    const withPhotos = entries.filter(e => e.photoPath);
-    if (!withPhotos.length) return alert('No hay fotos para descargar');
+    const withPhotos = entries.filter(e => e.photoPath || (e.photoURL && e.photoURL.startsWith('blob:')));
+    if (!withPhotos.length) return alert('No there are no photos to download for this month.');
+
     setIsExporting('zip');
     try {
       const JSZip = (window as any).JSZip;
       if (!JSZip) throw new Error("JSZip library not loaded");
 
       const zip = new JSZip();
+      const folder = zip.folder(`Tickets_${month}`);
+
       for (const e of withPhotos) {
         try {
-          const url = await getDownloadURL(ref(storage, e.photoPath));
-          const resp = await fetch(url);
-          const blob = await resp.blob();
-          zip.file(`${e.dateJs?.toISOString().slice(0, 10)}_${e.provider || 'ticket'}.jpg`, blob);
+          let blob: Blob;
+          if (e.photoPath) {
+            // Firebase Storage
+            const url = await getDownloadURL(ref(storage, e.photoPath));
+            const resp = await fetch(url);
+            blob = await resp.blob();
+          } else if (e.photoURL && e.photoURL.startsWith('blob:')) {
+            // Local Blob
+            const resp = await fetch(e.photoURL);
+            blob = await resp.blob();
+          } else {
+            continue;
+          }
+
+          const fileName = `${e.dateJs?.toISOString().slice(0, 10)}_${e.provider || 'ticket'}_${Math.floor(Math.random() * 1000)}.jpg`;
+          folder.file(fileName, blob);
         } catch (err) {
           console.warn(`Error fetching photo for ${e.provider}:`, err);
         }
       }
+
       const content = await zip.generateAsync({ type: 'blob' });
       const link = document.createElement('a');
       link.href = URL.createObjectURL(content);
-      link.download = `Tickets_${month}.zip`;
+      link.download = `Tickets_2N_${month}.zip`;
+      document.body.appendChild(link);
       link.click();
+      document.body.removeChild(link);
     } catch (e) {
       console.error("ZIP Export Error:", e);
-      alert(`Error al generar ZIP: ${e instanceof Error ? e.message : 'Error desconocido'}`);
+      alert(`Export failed: ${e instanceof Error ? e.message : 'Unknown error'}`);
     } finally {
       setIsExporting(null);
     }
