@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { collection, addDoc, query, orderBy, limit, getDocs, deleteDoc, doc, serverTimestamp, Timestamp } from 'firebase/firestore';
+import { collection, addDoc, query, orderBy, getDocs, deleteDoc, doc, serverTimestamp, Timestamp, where } from 'firebase/firestore';
 import { db } from '../firebase-init';
 import { User, KmEntry } from '../types';
 import { Car, PlusCircle, Trash2, Gauge, Fuel, Info, ChevronRight, TrendingUp, History } from 'lucide-react';
@@ -30,25 +30,40 @@ const Mileage: React.FC<MileageProps> = ({ user, lang }) => {
   }, [user]);
 
   const fetchKms = async () => {
+    const now = new Date();
+    const startOfMonth = new Date(Date.UTC(now.getFullYear(), now.getMonth(), 1));
+    const endOfMonth = new Date(Date.UTC(now.getFullYear(), now.getMonth() + 1, 1));
+
     if (user) {
-      const q = query(
-        collection(db, `users/${user.uid}/kms`),
-        orderBy('date', 'desc'),
-        limit(20)
-      );
-      const snap = await getDocs(q);
-      const list: KmEntry[] = [];
-      snap.forEach((docSnap) => {
-        const data = docSnap.data();
-        list.push({ ...data, id: docSnap.id, dateJs: (data.date as Timestamp).toDate() } as KmEntry);
-      });
-      setKms(list);
-      updateOdometer(list);
+      try {
+        const q = query(
+          collection(db, `users/${user.uid}/kms`),
+          where('date', '>=', Timestamp.fromDate(startOfMonth)),
+          where('date', '<', Timestamp.fromDate(endOfMonth)),
+          orderBy('date', 'desc')
+        );
+        const snap = await getDocs(q);
+        const list: KmEntry[] = [];
+        snap.forEach((docSnap) => {
+          const data = docSnap.data();
+          list.push({ ...data, id: docSnap.id, dateJs: (data.date as Timestamp).toDate() } as KmEntry);
+        });
+        setKms(list);
+        updateOdometer(list);
+      } catch (err) {
+        console.error("Error fetching kms:", err);
+      }
     } else {
       const local = JSON.parse(localStorage.getItem('kms_local') || '[]');
-      const list = local.slice(-20).reverse().map((e: any) => ({ ...e, dateJs: new Date(e.date) }));
-      setKms(list);
-      updateOdometer(list);
+      const filtered = local
+        .filter((k: any) => {
+          const d = new Date(k.date);
+          return d >= startOfMonth && d < endOfMonth;
+        })
+        .reverse()
+        .map((e: any) => ({ ...e, dateJs: new Date(e.date) }));
+      setKms(filtered);
+      updateOdometer(filtered);
     }
   };
 
@@ -269,7 +284,7 @@ const Mileage: React.FC<MileageProps> = ({ user, lang }) => {
               </div>
               <h2 className="text-lg font-bold text-slate-800">{t.history}</h2>
             </div>
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Últimos 20</span>
+            <span className="text-[10px] font-black text-blue-500 bg-blue-50 px-3 py-1 rounded-full uppercase tracking-wider">{t.last5}</span>
           </div>
           <div className="divide-y divide-slate-100 max-h-[850px] overflow-y-auto">
             {kms.length > 0 ? kms.map((item, idx) => (

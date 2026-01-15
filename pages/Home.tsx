@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { collection, addDoc, query, orderBy, limit, getDocs, serverTimestamp, Timestamp } from 'firebase/firestore';
+import { collection, addDoc, query, orderBy, getDocs, serverTimestamp, Timestamp, where } from 'firebase/firestore';
 import { db, storage } from '../firebase-init';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { ExpenseEntry, User } from '../types';
@@ -38,22 +38,38 @@ const Home: React.FC<HomeProps> = ({ user, lang }) => {
   }, [user]);
 
   const fetchRecentEntries = async () => {
+    const now = new Date();
+    const startOfMonth = new Date(Date.UTC(now.getFullYear(), now.getMonth(), 1));
+    const endOfMonth = new Date(Date.UTC(now.getFullYear(), now.getMonth() + 1, 1));
+
     if (user) {
-      const q = query(
-        collection(db, `users/${user.uid}/entries`),
-        orderBy('date', 'desc'),
-        limit(5)
-      );
-      const snap = await getDocs(q);
-      const list: ExpenseEntry[] = [];
-      snap.forEach((doc) => {
-        const data = doc.data();
-        list.push({ ...data, id: doc.id, dateJs: (data.date as Timestamp).toDate() } as ExpenseEntry);
-      });
-      setEntries(list);
+      try {
+        const q = query(
+          collection(db, `users/${user.uid}/entries`),
+          where('date', '>=', Timestamp.fromDate(startOfMonth)),
+          where('date', '<', Timestamp.fromDate(endOfMonth)),
+          orderBy('date', 'desc')
+        );
+        const snap = await getDocs(q);
+        const list: ExpenseEntry[] = [];
+        snap.forEach((doc) => {
+          const data = doc.data();
+          list.push({ ...data, id: doc.id, dateJs: (data.date as Timestamp).toDate() } as ExpenseEntry);
+        });
+        setEntries(list);
+      } catch (err) {
+        console.error("Error fetching entries:", err);
+      }
     } else {
       const local = JSON.parse(localStorage.getItem('entries_local') || '[]');
-      setEntries(local.slice(-5).reverse().map((e: any) => ({ ...e, dateJs: new Date(e.date) })));
+      const filtered = local
+        .filter((e: any) => {
+          const d = new Date(e.date);
+          return d >= startOfMonth && d < endOfMonth;
+        })
+        .reverse()
+        .map((e: any) => ({ ...e, dateJs: new Date(e.date) }));
+      setEntries(filtered);
     }
   };
 

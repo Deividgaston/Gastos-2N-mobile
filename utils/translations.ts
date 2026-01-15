@@ -6,7 +6,7 @@ export const translations = {
         home: {
             scan: 'Escanear Ticket', scanDesc: 'Gemini OCR Vision',
             manual: 'Ingreso Manual', manualDesc: 'Formulario rápido',
-            recent: 'Notas recientes', last5: 'Últimos 5', empty: 'Sin apuntes aún.',
+            recent: 'Historial del mes', last5: 'Mes actual', empty: 'Sin apuntes aún.',
             modalTitle: 'Revisar registro', processing: 'Procesando ticket...', iaWarning: 'IA de Gemini analizando datos',
             date: 'Fecha de gasto', amount: 'Importe Total (€)', provider: 'Establecimiento / Proveedor',
             category: 'Categoría', payment: 'Método de pago', notes: 'Observaciones', redo: 'Rehacer foto', save: 'Guardar gasto'
@@ -17,7 +17,7 @@ export const translations = {
             consumption: 'Consumo (l/100km)', fuel: 'Precio Combustible (€/L)', distance: 'Distancia (km)',
             type: 'Tipo de Trayecto', company: 'Empresa', personal: 'Personal',
             odometer: 'Odómetro Proyectado', current: 'Actual', projected: 'Tras viaje',
-            save: 'Guardar Registro', history: 'Historial Mensual', empty: 'Sin KM registrados.'
+            save: 'Guardar Registro', history: 'Historial del mes', empty: 'Sin KM registrados.'
         },
         summary: {
             title: 'Resumen mensual', reimbursement: 'Liquidación estimada', toReimburse: 'A reembolsar',
@@ -33,7 +33,7 @@ export const translations = {
         home: {
             scan: 'Scan Receipt', scanDesc: 'Gemini OCR Vision',
             manual: 'Manual Entry', manualDesc: 'Quick form',
-            recent: 'Recent Notes', last5: 'Last 5', empty: 'No notes yet.',
+            recent: 'Monthly History', last5: 'Current Month', empty: 'No notes yet.',
             modalTitle: 'Review Entry', processing: 'Processing receipt...', iaWarning: 'Gemini AI analyzing data',
             date: 'Expense Date', amount: 'Total Amount (€)', provider: 'Establishment / Provider',
             category: 'Category', payment: 'Payment Method', notes: 'Notes', redo: 'Retake Photo', save: 'Save Expense'
@@ -60,7 +60,7 @@ export const translations = {
         home: {
             scan: 'Digitalizar Recibo', scanDesc: 'Gemini OCR Vision',
             manual: 'Entrada Manual', manualDesc: 'Formulário rápido',
-            recent: 'Notas recentes', last5: 'Últimos 5', empty: 'Sem notas ainda.',
+            recent: 'Histórico do mês', last5: 'Mês atual', empty: 'Sem notas ainda.',
             modalTitle: 'Revisar registro', processing: 'Processando recibo...', iaWarning: 'Gemini AI analisando dados',
             date: 'Data da despesa', amount: 'Valor Total (€)', provider: 'Estabelecimento / Fornecedor',
             category: 'Categoria', payment: 'Método de pagamento', notes: 'Observações', redo: 'Refazer foto', save: 'Salvar despesa'
