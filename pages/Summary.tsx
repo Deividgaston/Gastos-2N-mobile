@@ -591,8 +591,8 @@ const Summary: React.FC<SummaryProps> = ({ user, lang }) => {
       {/* EXPORT ACTIONS GRID */}
       <section className="grid grid-cols-3 gap-3">
         <ActionCard title="PDF" desc="Descargar" icon={<Download size={16} />} onAction={buildPdf} color="blue" compact />
-        <ActionCard title="Excel" desc="Exportar" icon={<FileSpreadsheet size={16} />} onAction={exportExcel} loading={isExporting === 'excel'} compact />
-        <ActionCard title="ZIP" desc="Tickets" icon={<Archive size={16} />} onAction={exportZip} loading={isExporting === 'zip'} compact />
+        <ActionCard title="Excel" desc="Exportar" icon={<FileSpreadsheet size={16} />} onAction={exportExcel} loading={isExporting === 'excel'} color="white" compact />
+        <ActionCard title="ZIP" desc="Tickets" icon={<Archive size={16} />} onAction={exportZip} loading={isExporting === 'zip'} color="navy" compact />
       </section>
 
       {/* SPLIT VIEW - DETAILS */}
@@ -694,20 +694,29 @@ const StatBox = ({ label, value, icon, color }: any) => (
   </div>
 );
 
-const ActionCard = ({ title, desc, icon, onAction, color, loading, compact }: any) => (
-  <button
-    onClick={onAction}
-    disabled={loading}
-    className={`premium-card p-3 flex items-center gap-3 text-left hover:border-blue-300 transition-all active:scale-95 group w-full ${loading ? 'opacity-70' : ''}`}
-  >
-    <div className={`w-8 h-8 rounded-lg ${color === 'blue' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 group-hover:bg-blue-600 group-hover:text-white'} flex items-center justify-center transition-colors shrink-0`}>
-      {loading ? <Loader2 className="animate-spin" size={14} /> : icon}
-    </div>
-    <div className="min-w-0">
-      <h3 className="font-black text-slate-800 text-xs truncate">{title}</h3>
-      {!compact && <p className="text-[9px] font-medium text-slate-400 leading-tight truncate">{desc}</p>}
-    </div>
-  </button>
-);
+const ActionCard = ({ title, desc, icon, onAction, color, loading, compact }: any) => {
+  const isDark = color === 'blue' || color === 'navy';
+  return (
+    <button
+      onClick={onAction}
+      disabled={loading}
+      className={`p-3 rounded-2xl flex items-center gap-3 text-left transition-all active:scale-95 group w-full shadow-lg ${loading ? 'opacity-70' : ''} ${color === 'blue'
+        ? 'bg-blue-600 text-white hover:bg-blue-500 shadow-blue-500/20'
+        : color === 'navy'
+          ? 'bg-slate-900 text-white hover:bg-slate-800 shadow-slate-900/20'
+          : 'bg-white text-slate-800 hover:bg-slate-50 border border-slate-100'
+        }`}
+    >
+      <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors shrink-0 ${color === 'blue' || color === 'navy' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600 group-hover:bg-blue-100 group-hover:text-blue-600'
+        }`}>
+        {loading ? <Loader2 className="animate-spin" size={14} /> : icon}
+      </div>
+      <div className="min-w-0">
+        <h3 className={`font-black text-xs truncate ${isDark ? 'text-white' : 'text-slate-800'}`}>{title}</h3>
+        {!compact && <p className={`text-[9px] font-medium leading-tight truncate ${isDark ? 'text-blue-100' : 'text-slate-400'}`}>{desc}</p>}
+      </div>
+    </button>
+  );
+};
 
 export default Summary;
