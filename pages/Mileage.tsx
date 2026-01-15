@@ -24,15 +24,22 @@ const Mileage: React.FC<MileageProps> = ({ user, lang }) => {
     notes: '',
   });
   const [status, setStatus] = useState('');
+  const [month, setMonth] = useState(new Date().toISOString().slice(0, 7));
 
   useEffect(() => {
     fetchKms();
-  }, [user]);
+  }, [user, month]);
+
+  const changeMonth = (delta: number) => {
+    const [y, m] = month.split('-').map(Number);
+    const date = new Date(y, m - 1 + delta, 1);
+    setMonth(date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0'));
+  };
 
   const fetchKms = async () => {
-    const now = new Date();
-    const startOfMonth = new Date(Date.UTC(now.getFullYear(), now.getMonth(), 1));
-    const endOfMonth = new Date(Date.UTC(now.getFullYear(), now.getMonth() + 1, 1));
+    const [y, m] = month.split('-').map(Number);
+    const startOfMonth = new Date(y, m - 1, 1);
+    const endOfMonth = new Date(y, m, 1);
 
     if (user) {
       try {
@@ -278,13 +285,31 @@ const Mileage: React.FC<MileageProps> = ({ user, lang }) => {
       <div className="lg:col-span-7 space-y-8">
         <section className="premium-card overflow-hidden">
           <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center text-slate-400 shadow-sm border border-slate-100">
-                <History size={16} />
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+              <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-xl border border-slate-200">
+                <button
+                  onClick={() => changeMonth(-1)}
+                  className="w-8 h-8 flex items-center justify-center rounded-lg bg-white text-slate-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm active:scale-95"
+                >
+                  <ChevronRight className="rotate-180" size={14} />
+                </button>
+
+                <input
+                  type="month"
+                  value={month}
+                  onChange={e => setMonth(e.target.value)}
+                  className="bg-transparent border-none text-[11px] font-bold text-slate-700 w-24 text-center focus:outline-none"
+                />
+
+                <button
+                  onClick={() => changeMonth(1)}
+                  className="w-8 h-8 flex items-center justify-center rounded-lg bg-white text-slate-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm active:scale-95"
+                >
+                  <ChevronRight size={14} />
+                </button>
               </div>
-              <h2 className="text-lg font-bold text-slate-800">{t.history}</h2>
+              <span className="hidden sm:block text-[10px] font-black text-blue-500 bg-blue-50 px-3 py-1 rounded-full uppercase tracking-wider">{t.history}</span>
             </div>
-            <span className="text-[10px] font-black text-blue-500 bg-blue-50 px-3 py-1 rounded-full uppercase tracking-wider">{t.last5}</span>
           </div>
           <div className="divide-y divide-slate-100 max-h-[850px] overflow-y-auto">
             {kms.length > 0 ? kms.map((item, idx) => (

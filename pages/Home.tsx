@@ -39,8 +39,8 @@ const Home: React.FC<HomeProps> = ({ user, lang }) => {
 
   const fetchRecentEntries = async () => {
     const now = new Date();
-    const startOfMonth = new Date(Date.UTC(now.getFullYear(), now.getMonth(), 1));
-    const endOfMonth = new Date(Date.UTC(now.getFullYear(), now.getMonth() + 1, 1));
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
 
     if (user) {
       try {

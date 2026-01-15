@@ -46,12 +46,18 @@ const Summary: React.FC<SummaryProps> = ({ user, lang }) => {
     fetchMonthData();
   }, [user, month]);
 
+  const changeMonth = (delta: number) => {
+    const [y, m] = month.split('-').map(Number);
+    const date = new Date(y, m - 1 + delta, 1);
+    setMonth(date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0'));
+  };
+
   const fetchMonthData = async () => {
     const parts = month.split('-');
     const y = parseInt(parts[0]);
     const m = parseInt(parts[1]) - 1;
-    const start = new Date(Date.UTC(y, m, 1));
-    const end = new Date(Date.UTC(y, m + 1, 1));
+    const start = new Date(y, m, 1);
+    const end = new Date(y, m + 1, 1);
 
     try {
       if (user) {
@@ -363,9 +369,30 @@ const Summary: React.FC<SummaryProps> = ({ user, lang }) => {
             </div>
 
             <div className="flex flex-wrap items-center gap-4">
-              <div className="relative">
-                <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                <input type="month" value={month} onChange={e => setMonth(e.target.value)} className="input-premium pl-12 font-bold w-48" />
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => changeMonth(-1)}
+                  className="w-12 h-12 flex items-center justify-center rounded-xl bg-slate-100 text-slate-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm border border-slate-200 active:scale-95"
+                >
+                  <ChevronRight className="rotate-180" size={20} />
+                </button>
+
+                <div className="relative">
+                  <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                  <input
+                    type="month"
+                    value={month}
+                    onChange={e => setMonth(e.target.value)}
+                    className="input-premium pl-12 font-bold w-48 h-12"
+                  />
+                </div>
+
+                <button
+                  onClick={() => changeMonth(1)}
+                  className="w-12 h-12 flex items-center justify-center rounded-xl bg-slate-100 text-slate-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm border border-slate-200 active:scale-95"
+                >
+                  <ChevronRight size={20} />
+                </button>
               </div>
 
               <div className="flex bg-slate-100 p-1 rounded-2xl border border-slate-200 opacity-50 grayscale pointer-events-none">
