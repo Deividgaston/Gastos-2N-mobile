@@ -158,7 +158,10 @@ const App: React.FC = () => {
       console.error("Auth error:", err);
       let msg = err.message;
       if (err.code === 'auth/invalid-email') msg = "El formato del email no es válido. Revisa que no haya espacios al final.";
-      if (err.code === 'auth/email-already-in-use') msg = "Este correo ya está registrado. Intenta iniciar sesión.";
+      if (err.code === 'auth/email-already-in-use') {
+        msg = "Este correo ya está registrado. Te hemos cambiado al modo 'Iniciar Sesión'. Introduce tu contraseña.";
+        setIsRegistering(false); // Auto-switch to login
+      }
       if (err.code === 'auth/weak-password') msg = "La contraseña es muy débil. Usa al menos 6 caracteres.";
 
       alert('Error de Autenticación: ' + msg);

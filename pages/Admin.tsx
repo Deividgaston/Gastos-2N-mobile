@@ -18,7 +18,10 @@ const Admin: React.FC = () => {
     const [showInviteModal, setShowInviteModal] = useState<{ show: boolean, email: string }>({ show: false, email: '' });
 
     useEffect(() => {
-        const checkMobile = () => setIsMobile(window.innerWidth < 768);
+        const checkMobile = () => {
+            console.log("Admin panel window width:", window.innerWidth);
+            setIsMobile(window.innerWidth < 640);
+        };
         checkMobile();
         window.addEventListener('resize', checkMobile);
 
@@ -136,10 +139,15 @@ ${inviteUrl}`;
 
     if (isMobile) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-8 space-y-4">
-                <Smartphone size={64} className="text-slate-300" />
-                <h2 className="text-xl font-black text-slate-800">Desktop Only</h2>
-                <p className="text-slate-500 text-sm">Please access the Admin Panel from a computer to manage users safely.</p>
+            <div className="flex flex-col items-center justify-center p-8 text-center space-y-4 animate-fade-in">
+                <Smartphone size={48} className="text-blue-500" />
+                <h2 className="text-xl font-black text-slate-800">Panel de Administración</h2>
+                <p className="text-sm text-slate-500 max-w-xs">
+                    El panel de administración está optimizado para pantallas grandes. Por favor, accede desde un ordenador para gestionar usuarios con mayor comodidad.
+                </p>
+                <div className="pt-4 border-t border-slate-100 w-full">
+                    <p className="text-[10px] font-black uppercase text-slate-400">Ancho detectado: {window.innerWidth}px</p>
+                </div>
             </div>
         );
     }
