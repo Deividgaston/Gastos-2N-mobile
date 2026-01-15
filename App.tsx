@@ -24,8 +24,14 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.get('auth') === 'email') setShowEmailLogin(true);
-    if (params.get('auth') === 'invite') setIsInvited(true);
+    if (params.get('auth') === 'email') {
+      setShowEmailLogin(true);
+      setIsRegistering(true); // Default to registration since they're new
+    }
+    if (params.get('auth') === 'invite') {
+      setIsInvited(true);
+      setIsRegistering(true); // Default to registration since they're new
+    }
   }, []);
 
   useEffect(() => {
@@ -240,7 +246,9 @@ const App: React.FC = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Password</label>
+                    <label className="text-[10px] font-black uppercase text-slate-400 ml-1">
+                      {isRegistering ? 'Choose your password' : 'Password'}
+                    </label>
                     <input
                       type="password"
                       required
@@ -249,13 +257,18 @@ const App: React.FC = () => {
                       className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-blue-500 outline-none"
                       placeholder="••••••••"
                     />
+                    {isRegistering && (
+                      <p className="text-[9px] text-slate-400 ml-1 font-medium italic">Min. 6 characters</p>
+                    )}
                   </div>
 
                   <button
                     type="submit"
                     className="w-full btn-premium py-4 bg-blue-600 text-white hover:bg-blue-500 shadow-xl shadow-blue-200"
                   >
-                    <span className="font-bold">{isRegistering ? 'Create Account' : 'Sign In Now'}</span>
+                    <span className="font-bold">
+                      {isRegistering ? 'Set Password & Access' : 'Sign In Now'}
+                    </span>
                   </button>
 
                   <div className="flex flex-col gap-3 pt-4 border-t border-slate-100 text-center">
