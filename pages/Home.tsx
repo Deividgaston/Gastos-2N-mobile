@@ -96,7 +96,7 @@ const Home: React.FC<HomeProps> = ({ user, lang }) => {
         const b64 = btoa(new Uint8Array(ab).reduce((data, byte) => data + String.fromCharCode(byte), ''));
 
         const response = await ai.models.generateContent({
-          model: 'gemini-1.5-flash',
+          model: 'gemini-2.5-flash',
           contents: {
             parts: [
               { text: 'Extrae proveedor, fecha (YYYY-MM-DD), categoría (comida, peajes, gasolina, transporte, alojamiento, ocio, servicios, varios o ingreso) e importe total EUR de este ticket.' },
