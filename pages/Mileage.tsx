@@ -426,7 +426,7 @@ const Mileage: React.FC<MileageProps> = ({ user, lang }) => {
                     type="date"
                     value={editingKm.dateJs ? editingKm.dateJs.toISOString().slice(0, 10) : ''}
                     onChange={e => setEditingKm({ ...editingKm, dateJs: new Date(e.target.value) })}
-                    className="input-premium font-bold text-sm py-2"
+                    className="input-premium font-bold text-sm py-2 text-center w-full"
                   />
                 </div>
                 <div className="space-y-1">

@@ -681,7 +681,7 @@ const Summary: React.FC<SummaryProps> = ({ user, lang }) => {
                     type="date"
                     value={editingEntry.dateJs ? editingEntry.dateJs.toISOString().slice(0, 10) : ''}
                     onChange={e => setEditingEntry({ ...editingEntry, dateJs: new Date(e.target.value) })}
-                    className="input-premium font-bold text-sm py-2"
+                    className="input-premium font-bold text-sm py-2 text-center w-full"
                   />
                 </div>
                 <div className="space-y-1">
