@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { collection, query, getDocs, addDoc, updateDoc, doc, deleteDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase-init';
-import { UserPlus, ShieldCheck, Mail, Send, Trash2, ShieldAlert, Smartphone } from 'lucide-react';
+import { UserPlus, ShieldCheck, Mail, Send, Trash2, ShieldAlert, Smartphone, Copy, X } from 'lucide-react';
 
 interface WhitelistedUser {
     id: string;
@@ -15,6 +15,7 @@ const Admin: React.FC = () => {
     const [emails, setEmails] = useState<WhitelistedUser[]>([]);
     const [newEmail, setNewEmail] = useState('');
     const [isMobile, setIsMobile] = useState(false);
+    const [showInviteModal, setShowInviteModal] = useState<{ show: boolean, email: string }>({ show: false, email: '' });
 
     useEffect(() => {
         const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -84,6 +85,23 @@ ${inviteUrl}`;
 
         const encoded = encodeURIComponent(message);
         window.open(`https://wa.me/?text=${encoded}`, '_blank');
+    };
+
+    const openInviteModal = (email: string) => {
+        setShowInviteModal({ show: true, email });
+    };
+
+    const copyInviteToClipboard = () => {
+        const inviteUrl = `${window.location.origin}${window.location.pathname}?auth=email`;
+        const textToCopy = `¡Hola! 👋 Has sido invitado a la plataforma de Gastos 2N.
+
+Tu correo ya está autorizado: ${showInviteModal.email}
+
+Para empezar, haz clic en este enlace y elige "Usar Email y Contraseña" para crear tu cuenta:
+${inviteUrl}`;
+
+        navigator.clipboard.writeText(textToCopy);
+        alert('Copiado al portapapeles');
     };
 
     const sendEmailInvite = async (email: string) => {
@@ -210,11 +228,11 @@ ${inviteUrl}`;
                                                     <Send size={16} />
                                                 </button>
                                                 <button
-                                                    onClick={() => sendEmailInvite(u.email)}
+                                                    onClick={() => openInviteModal(u.email)}
                                                     className="w-9 h-9 flex items-center justify-center rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm"
-                                                    title="Invite via Email"
+                                                    title="Copy Invitation Text"
                                                 >
-                                                    <Mail size={16} />
+                                                    <Copy size={16} />
                                                 </button>
                                                 <button
                                                     onClick={() => handleDelete(u.id)}
@@ -232,6 +250,40 @@ ${inviteUrl}`;
                     </div>
                 </div>
             </div>
+
+            {/* INVITE MODAL */}
+            {showInviteModal.show && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-slide-up">
+                        <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                            <h3 className="font-black text-slate-800 uppercase text-xs tracking-widest">Texto de Invitación</h3>
+                            <button
+                                onClick={() => setShowInviteModal({ show: false, email: '' })}
+                                className="text-slate-400 hover:text-slate-600 p-2 hover:bg-slate-100 rounded-xl transition-all"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <div className="p-8 space-y-6">
+                            <div className="bg-slate-50 rounded-2xl p-6 border border-slate-100">
+                                <p className="text-sm font-bold text-slate-700 leading-relaxed whitespace-pre-wrap">
+                                    {`¡Hola! 👋 Has sido invitado a la plataforma de Gastos 2N.\n\nTu correo ya está autorizado: ${showInviteModal.email}\n\nPara empezar, haz clic en este enlace y elige "Usar Email y Contraseña" para crear tu cuenta:\n${window.location.origin}${window.location.pathname}?auth=email`}
+                                </p>
+                            </div>
+                            <button
+                                onClick={copyInviteToClipboard}
+                                className="w-full bg-blue-600 hover:bg-blue-500 text-white py-4 rounded-2xl font-black text-sm flex items-center justify-center gap-3 shadow-xl shadow-blue-100 transition-all active:scale-95"
+                            >
+                                <Copy size={20} />
+                                Copiar al Portapapeles
+                            </button>
+                            <p className="text-center text-[10px] text-slate-400 font-bold uppercase tracking-tighter">
+                                Copia este texto y mándalo por email, Teams o cualquier otra plataforma.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
