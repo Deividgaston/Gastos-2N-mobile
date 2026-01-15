@@ -321,30 +321,22 @@ const Summary: React.FC<SummaryProps> = ({ user, lang }) => {
       const XLSX = (window as any).XLSX;
       if (!XLSX) throw new Error("XLSX library not loaded");
 
-      // "Drawn" visual layout for Excel with simulating borders/colors via text
+      const wb = XLSX.utils.book_new();
       const dataRows = [
-        ["================================================="],
-        ["          2N EXPENSES - MONTHLY REPORT           "],
-        ["================================================="],
+        ["EXPENSES REPORT"],
         [`PERIOD: ${month}`],
-        ["STATUS: OFFICIAL SUMMARY"],
         [],
-        ["[ SUMMARY SECTION ]"],
-        ["-------------------------------------------------"],
-        ["METRIC", "VALUE", "CURRENCY"],
-        ["TOTAL MONTHLY EXPENSES", stats.total.toFixed(2), "EUR"],
-        ["PAID WITH PERSONAL FUNDS", stats.personal.toFixed(2), "EUR"],
-        ["COMPANY DEBT TO EMPLOYEE", companyOwes.toFixed(2), "EUR"],
-        ["-------------------------------------------------"],
-        ["Km Company (Professional)", stats.kmEmp.toFixed(1), "KM"],
-        ["Km Personal (Reimbursable)", stats.kmPer.toFixed(1), "KM"],
-        ["Personal Rebate Cost", stats.kmCostPer.toFixed(2), "EUR"],
-        ["-------------------------------------------------"],
+        ["SUMMARY SECTION"],
+        ["METRIC", "VALUE", "UNIT"],
+        ["TOTAL MONTHLY EXPENSES", Number(stats.total).toFixed(2), "EUR"],
+        ["PAID WITH PERSONAL FUNDS", Number(stats.personal).toFixed(2), "EUR"],
+        ["COMPANY DEBT TO EMPLOYEE", Number(companyOwes).toFixed(2), "EUR"],
+        ["KM COMPANY (PROFESSIONAL)", Number(stats.kmEmp).toFixed(1), "KM"],
+        ["KM PERSONAL (REIMBURSABLE)", Number(stats.kmPer).toFixed(1), "KM"],
+        ["PERSONAL REBATE COST", Number(stats.kmCostPer).toFixed(2), "EUR"],
         [],
-        ["[ DETAILED EXPENSES LIST ]"],
-        ["---------------------------------------------------------------------------------"],
+        ["DETAILED EXPENSES LIST"],
         ["DATE", "VENDOR / PROVIDER", "CATEGORY", "METHOD", "NOTES", "AMOUNT"],
-        ["----------", "-----------------", "----------", "------", "--------------------", "------"]
       ];
 
       entries.forEach(e => {
@@ -358,14 +350,7 @@ const Summary: React.FC<SummaryProps> = ({ user, lang }) => {
         ]);
       });
 
-      dataRows.push(
-        [],
-        ["[ DETAILED MILEAGE LOG ]"],
-        ["---------------------------------------------------------------------------------"],
-        ["DATE", "TRIP TYPE", "DISTANCE", "FUEL PRICE", "EST. CONS.", "NOTES"],
-        ["----------", "---------", "----------", "----------", "----------", "-----"]
-      );
-
+      dataRows.push([], ["DETAILED MILEAGE LOG"], ["DATE", "TRIP TYPE", "DISTANCE", "FUEL PRICE", "EST. CONS.", "NOTES"]);
       kms.forEach(k => {
         dataRows.push([
           k.dateJs?.toISOString().slice(0, 10),
@@ -377,24 +362,46 @@ const Summary: React.FC<SummaryProps> = ({ user, lang }) => {
         ]);
       });
 
-      dataRows.push(["---------------------------------------------------------------------------------"]);
-      dataRows.push(["END OF REPORT"]);
-
       const ws = XLSX.utils.aoa_to_sheet(dataRows);
 
-      // Basic aesthetic sizing (not supported by all XLSX viewers but helps in some)
-      ws['!cols'] = [
-        { wch: 15 }, // Date
-        { wch: 30 }, // Provider
-        { wch: 20 }, // Category
-        { wch: 15 }, // Paid with
-        { wch: 40 }, // Notes
-        { wch: 12 }, // Amount
-      ];
+      // --- APPLY STYLES ---
+      const range = XLSX.utils.decode_range(ws['!ref'] || "A1:F1");
 
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "MonthlyReport");
+      for (let r = range.s.r; r <= range.e.r; r++) {
+        for (let c = range.s.c; c <= range.e.c; c++) {
+          const cellRef = XLSX.utils.encode_cell({ r, c });
+          if (!ws[cellRef]) continue;
 
+          const cellValue = String(ws[cellRef].v || "");
+
+          // Header Styles (Sections)
+          if (["EXPENSES REPORT", "SUMMARY SECTION", "DETAILED EXPENSES LIST", "DETAILED MILEAGE LOG"].includes(cellValue)) {
+            ws[cellRef].s = {
+              fill: { fgColor: { rgb: "000000" } },
+              font: { color: { rgb: "FFFFFF" }, bold: true, sz: 14 },
+              alignment: { horizontal: "center" }
+            };
+          }
+
+          // Sub-headers (The column names)
+          if (["METRIC", "VALUE", "UNIT", "DATE", "VENDOR / PROVIDER", "CATEGORY", "METHOD", "NOTES", "AMOUNT", "TRIP TYPE", "DISTANCE", "FUEL PRICE", "EST. CONS."].includes(cellValue)) {
+            ws[cellRef].s = {
+              fill: { fgColor: { rgb: "334155" } }, // slate-700
+              font: { color: { rgb: "FFFFFF" }, bold: true },
+              border: { bottom: { style: "thin", color: { rgb: "000000" } } }
+            };
+          }
+
+          // Zebra Striping for data rows
+          if (r > 13 && r % 2 === 0 && ws[cellRef].v) {
+            ws[cellRef].s = { ...ws[cellRef].s, fill: { fgColor: { rgb: "F1F5F9" } } };
+          }
+        }
+      }
+
+      ws['!cols'] = [{ wch: 15 }, { wch: 25 }, { wch: 15 }, { wch: 15 }, { wch: 30 }, { wch: 12 }];
+
+      XLSX.utils.book_append_sheet(wb, ws, "Report");
       XLSX.writeFile(wb, `Expenses_2N_${month}.xlsx`);
     } catch (e) {
       console.error("Excel Export Error:", e);
