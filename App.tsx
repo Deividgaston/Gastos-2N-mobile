@@ -35,6 +35,14 @@ const App: React.FC = () => {
       if (!user || !user.email) return;
 
       try {
+        // --- EMERGENCY BYPASS FOR OWNER ---
+        if (user.email.toLowerCase() === 'gastonortigosa@gmail.com') {
+          setUser(prev => prev ? { ...prev, isAdmin: true, isWhitelisted: true } : null);
+          setIsAuthorized(true);
+          setLoading(false);
+          return;
+        }
+
         // 1. Check if ANY user exists (Bootstrap check)
         const qAll = query(collection(db, 'whitelisted_users'), limit(1));
         const allSnap = await getDocs(qAll);
