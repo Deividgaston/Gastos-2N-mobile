@@ -197,7 +197,7 @@ const Mileage: React.FC<MileageProps> = ({ user, lang }) => {
           </div>
 
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1">
                 <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Fecha</label>
                 <input
@@ -403,6 +403,103 @@ const Mileage: React.FC<MileageProps> = ({ user, lang }) => {
           </div>
         </section>
       </div>
+
+      {/* EDIT MODAL */}
+      {editingKm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-slide-up">
+            <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+              <h3 className="font-black text-slate-800 uppercase text-xs tracking-widest">Editar KM</h3>
+              <button
+                onClick={() => setEditingKm(null)}
+                className="text-slate-400 hover:text-slate-600 p-2 hover:bg-slate-100 rounded-xl transition-all"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="p-5 space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Fecha</label>
+                  <input
+                    type="date"
+                    value={editingKm.dateJs ? editingKm.dateJs.toISOString().slice(0, 10) : ''}
+                    onChange={e => setEditingKm({ ...editingKm, dateJs: new Date(e.target.value) })}
+                    className="input-premium font-bold text-sm py-2"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Kms</label>
+                  <input
+                    type="number"
+                    value={editingKm.km || editingKm.distance}
+                    onChange={e => setEditingKm({ ...editingKm, km: e.target.value })}
+                    className="input-premium font-black text-blue-600 text-lg py-2"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">{t.type}</label>
+                  <select
+                    value={editingKm.type}
+                    onChange={e => setEditingKm({ ...editingKm, type: e.target.value })}
+                    className="input-premium font-bold appearance-none text-sm py-2"
+                  >
+                    <option value="empresa">{t.company}</option>
+                    <option value="personal">{t.personal}</option>
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">{t.fuel}</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={editingKm.fuelPrice || ''}
+                    onChange={e => setEditingKm({ ...editingKm, fuelPrice: e.target.value })}
+                    className="input-premium font-bold text-sm py-2"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">{t.consumption}</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={editingKm.consumption || 6.0}
+                    onChange={e => setEditingKm({ ...editingKm, consumption: e.target.value })}
+                    className="input-premium font-bold text-sm py-2"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Notas</label>
+                <textarea
+                  rows={2}
+                  value={editingKm.notes || ''}
+                  onChange={e => setEditingKm({ ...editingKm, notes: e.target.value })}
+                  className="input-premium resize-none text-sm py-2"
+                ></textarea>
+              </div>
+            </div>
+
+            <div className="p-4 border-t border-slate-100 bg-slate-50 flex items-center justify-end gap-3">
+              <button
+                onClick={updateKmEntry}
+                className="btn-premium btn-premium-primary px-6 py-2 text-sm h-10 w-full"
+              >
+                <span>Guardar Cambios</span>
+                <ChevronRight size={16} />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
