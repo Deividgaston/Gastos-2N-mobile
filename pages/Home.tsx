@@ -186,17 +186,30 @@ const Home: React.FC<HomeProps> = ({ user, lang }) => {
           <p className="text-sm font-medium text-slate-400">{translations[lang].home.scanDesc}</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <button
             onClick={() => handleScan(true)}
-            className="group relative overflow-hidden flex flex-col items-center justify-center gap-4 p-10 bg-slate-900 text-white rounded-[2rem] shadow-2xl transition-all active:scale-95 border-b-4 border-blue-600"
+            className="group relative overflow-hidden flex flex-col items-center justify-center gap-4 p-8 bg-slate-900 text-white rounded-[2rem] shadow-2xl transition-all active:scale-95 border-b-4 border-blue-600"
           >
-            <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-500 shadow-xl shadow-blue-500/20">
-              <Camera size={32} />
+            <div className="w-14 h-14 bg-blue-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-500 shadow-xl shadow-blue-500/20">
+              <Camera size={28} />
             </div>
             <div className="text-center">
-              <span className="font-bold text-xl block">{t.scan}</span>
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">{t.scanDesc}</span>
+              <span className="font-bold text-lg block">{t.scan}</span>
+              <span className="text-[9px] font-black uppercase tracking-[0.2em] opacity-40">Cámara</span>
+            </div>
+          </button>
+
+          <button
+            onClick={() => handleScan(false)}
+            className="group relative overflow-hidden flex flex-col items-center justify-center gap-4 p-8 bg-blue-600 text-white rounded-[2rem] shadow-2xl transition-all active:scale-95 border-b-4 border-blue-800"
+          >
+            <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
+              <ImageIcon size={28} />
+            </div>
+            <div className="text-center">
+              <span className="font-bold text-lg block">Importar</span>
+              <span className="text-[9px] font-black uppercase tracking-[0.2em] opacity-40">Galería + IA</span>
             </div>
           </button>
 
@@ -206,14 +219,14 @@ const Home: React.FC<HomeProps> = ({ user, lang }) => {
               setFormData({ date: new Date().toISOString().slice(0, 10), amount: 0, provider: '', category: 'varios', paidWith: 'empresa', notes: '' });
               setShowReviewModal(true);
             }}
-            className="group flex flex-col items-center justify-center gap-4 p-10 bg-white border border-slate-200 hover:border-blue-200 hover:bg-blue-50/30 text-slate-800 rounded-[2rem] transition-all active:scale-95"
+            className="group flex flex-col items-center justify-center gap-4 p-8 bg-white border border-slate-200 hover:border-blue-200 hover:bg-blue-50/30 text-slate-800 rounded-[2rem] transition-all active:scale-95"
           >
-            <div className="w-16 h-16 bg-slate-50 group-hover:bg-blue-100 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-500 text-blue-600 shadow-sm">
-              <Plus size={32} />
+            <div className="w-14 h-14 bg-slate-50 group-hover:bg-blue-100 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-500 text-blue-600 shadow-sm">
+              <Plus size={28} />
             </div>
             <div className="text-center">
-              <span className="font-bold text-xl block">{t.manual}</span>
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-300">{t.manualDesc}</span>
+              <span className="font-bold text-lg block">{t.manual}</span>
+              <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-300">Sin IA</span>
             </div>
           </button>
         </div>
