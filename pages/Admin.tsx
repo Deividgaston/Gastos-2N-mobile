@@ -262,8 +262,8 @@ ${inviteUrl}`;
             {/* INVITE MODAL */}
             {showInviteModal.show && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
-                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-slide-up">
-                        <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md max-h-[90vh] flex flex-col overflow-hidden animate-slide-up">
+                        <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50 sticky top-0 z-10">
                             <h3 className="font-black text-slate-800 uppercase text-xs tracking-widest">Texto de Invitación</h3>
                             <button
                                 onClick={() => setShowInviteModal({ show: false, email: '' })}
