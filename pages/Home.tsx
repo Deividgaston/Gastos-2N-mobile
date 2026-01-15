@@ -5,7 +5,7 @@ import { db, storage } from '../firebase-init';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { ExpenseEntry, User } from '../types';
 import { GoogleGenAI, Type } from "@google/genai";
-import { Camera, Plus, History, Clock, Tag, CreditCard, ChevronRight, Loader2 } from 'lucide-react';
+import { Camera, Plus, History, Clock, Tag, CreditCard, ChevronRight, Loader2, Image as ImageIcon } from 'lucide-react';
 import { resizeImage } from '../utils/image-utils';
 import { translations, Language } from '../utils/translations';
 
