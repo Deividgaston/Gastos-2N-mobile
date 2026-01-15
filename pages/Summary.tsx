@@ -192,7 +192,7 @@ const Summary: React.FC<SummaryProps> = ({ user, lang }) => {
         compOwes: "Company owes me:",
         compMil: "Company mileage:",
         persMil: "Personal mileage:",
-        persCost: "Personal mileage cost (km x €/L x 6L/100km):",
+        persCost: "Personal mileage cost (km * €/L * l/100km):",
         hDate: "Date",
         hProvider: "Provider",
         hCat: "Category",
@@ -201,6 +201,7 @@ const Summary: React.FC<SummaryProps> = ({ user, lang }) => {
         hAmt: "Amount",
         hType: "Type",
         hKm: "KM",
+        hCons: "l/100km",
         hFuel: "€/L",
         hCost: "Personal cost"
       };
@@ -284,7 +285,7 @@ const Summary: React.FC<SummaryProps> = ({ user, lang }) => {
       const finalY = (doc as any).lastAutoTable.finalY + 12;
       (doc as any).autoTable({
         startY: finalY,
-        head: [[L.hDate, L.hType, L.hKm, L.hFuel, L.hCost, L.hNotes]],
+        head: [[L.hDate, L.hType, L.hKm, L.hCons, L.hFuel, L.hCost, L.hNotes]],
         body: kms.map(k => {
           const isPersonal = String(k.type).toLowerCase().includes('per');
           let cost = "-";
@@ -295,6 +296,7 @@ const Summary: React.FC<SummaryProps> = ({ user, lang }) => {
             k.dateJs?.toISOString().slice(0, 10),
             String(k.type).toUpperCase(),
             (k.km || k.distance || 0).toFixed(1),
+            (k.consumption || 6.0).toFixed(1),
             k.fuelPrice?.toFixed(2) || "-",
             cost,
             k.notes || "-"
@@ -308,9 +310,10 @@ const Summary: React.FC<SummaryProps> = ({ user, lang }) => {
           0: { cellWidth: 25 },
           1: { cellWidth: 30 },
           2: { cellWidth: 15, halign: 'center' },
-          3: { cellWidth: 15, halign: 'center' },
-          4: { cellWidth: 25, halign: 'right', fontStyle: 'bold' }, // Personal Cost
-          5: { cellWidth: 'auto' } // Notes (max space)
+          3: { cellWidth: 15, halign: 'center' }, // Consumption
+          4: { cellWidth: 15, halign: 'center' }, // Fuel
+          5: { cellWidth: 25, halign: 'right', fontStyle: 'bold' }, // Cost
+          6: { cellWidth: 'auto' } // Notes
         }
       });
 
