@@ -30,6 +30,7 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (u) => {
+      console.log("onAuthStateChanged:", u ? u.email : "null");
       if (u) {
         setUser({ uid: u.uid, email: u.email || '' });
       } else {
@@ -43,11 +44,16 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const checkAuthorization = async () => {
-      if (!user || !user.email) return;
+      if (!user || !user.email) {
+        console.log("No user or email yet, skipping auth check");
+        return;
+      }
 
       try {
+        console.log("Checking authorization for:", user.email);
         // --- EMERGENCY BYPASS FOR OWNER ---
         if (user.email.toLowerCase() === 'gastonortigosa@gmail.com') {
+          console.log("Owner bypass triggered");
           setUser(prev => prev ? { ...prev, isAdmin: true, isWhitelisted: true } : null);
           setIsAuthorized(true);
           setLoading(false);
@@ -57,8 +63,10 @@ const App: React.FC = () => {
         // 1. Check if ANY user exists (Bootstrap check)
         const qAll = query(collection(db, 'whitelisted_users'), limit(1));
         const allSnap = await getDocs(qAll);
+        console.log("Collection empty check:", allSnap.empty);
 
         if (allSnap.empty) {
+          console.log("Bootstrapping first user...");
           // Initialize first user as admin
           await addDoc(collection(db, 'whitelisted_users'), {
             email: user.email.toLowerCase(),
@@ -73,12 +81,14 @@ const App: React.FC = () => {
         }
 
         // 2. Check current user
+        console.log("Querying whitelist for current user...");
         const q = query(
           collection(db, 'whitelisted_users'),
           where('email', '==', user.email.toLowerCase()),
           limit(1)
         );
         const snap = await getDocs(q);
+        console.log("Whitelist query result:", !snap.empty);
 
         if (!snap.empty) {
           const data = snap.docs[0].data();
@@ -92,11 +102,9 @@ const App: React.FC = () => {
           setIsAuthorized(false);
         }
       } catch (err: any) {
-        console.error("Auth check error:", err);
-        // If it's a permission error, it might be because the collection is empty but rules block reading it
-        // and we can't bootstrap. For now, assume unauthorized but alert the error.
+        console.error("Auth check error in App.tsx:", err);
         if (err.code === 'permission-denied') {
-          console.warn("Permission denied. Ensure Firestore rules allow initial read/write or collection exists.");
+          console.warn("Permission denied. Check rules for 'whitelisted_users'.");
         }
         setIsAuthorized(false);
       } finally {
@@ -123,18 +131,23 @@ const App: React.FC = () => {
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) return alert('Email & Password required');
+    if (password.length < 6) return alert('Password must be at least 6 characters');
 
     try {
+      console.log("Starting email auth...", { email, isRegistering });
       setLoading(true);
       if (isRegistering) {
-        await createUserWithEmailAndPassword(auth, email, password);
+        const res = await createUserWithEmailAndPassword(auth, email, password);
+        console.log("User created:", res.user.email);
       } else {
-        await signInWithEmailAndPassword(auth, email, password);
+        const res = await signInWithEmailAndPassword(auth, email, password);
+        console.log("User signed in:", res.user.email);
       }
-      setShowEmailLogin(false);
+      // Note: We don't call setLoading(false) here on success to keep spinner 
+      // visible until checkAuthorization finishes.
     } catch (err: any) {
+      console.error("Auth error:", err);
       alert('Auth Error: ' + err.message);
-    } finally {
       setLoading(false);
     }
   };
