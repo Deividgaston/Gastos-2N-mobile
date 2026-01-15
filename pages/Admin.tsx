@@ -86,6 +86,36 @@ ${inviteUrl}`;
         window.open(`https://wa.me/?text=${encoded}`, '_blank');
     };
 
+    const sendEmailInvite = async (email: string) => {
+        const inviteUrl = `${window.location.origin}${window.location.pathname}?auth=email`;
+
+        try {
+            await addDoc(collection(db, 'mail'), {
+                to: email,
+                message: {
+                    subject: 'Invitación a Gastos 2N',
+                    html: `
+                        <div style="font-family: sans-serif; padding: 20px; color: #333;">
+                            <h2 style="color: #2563eb;">¡Hola! 👋</h2>
+                            <p>Has sido invitado a usar la plataforma de gestión de gastos e ingresos de **2N**.</p>
+                            <p>Tu cuenta ya ha sido autorizada.</p>
+                            <div style="margin: 30px 0;">
+                                <a href="${inviteUrl}" style="background-color: #2563eb; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">
+                                    Configurar mi cuenta ahora
+                                </a>
+                            </div>
+                            <p style="font-size: 12px; color: #666;">Si el botón no funciona, copia y pega este enlace: <br/> ${inviteUrl}</p>
+                        </div>
+                    `
+                }
+            });
+            alert('Invitación enviada por email correctamente (Vía Firebase)');
+        } catch (err) {
+            console.error(err);
+            alert('Error al enviar la invitación por email');
+        }
+    };
+
     if (isMobile) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-8 space-y-4">
@@ -178,6 +208,13 @@ ${inviteUrl}`;
                                                     title="Invite via WhatsApp"
                                                 >
                                                     <Send size={16} />
+                                                </button>
+                                                <button
+                                                    onClick={() => sendEmailInvite(u.email)}
+                                                    className="w-9 h-9 flex items-center justify-center rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm"
+                                                    title="Invite via Email"
+                                                >
+                                                    <Mail size={16} />
                                                 </button>
                                                 <button
                                                     onClick={() => handleDelete(u.id)}
