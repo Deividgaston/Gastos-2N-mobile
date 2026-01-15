@@ -660,22 +660,102 @@ const Summary: React.FC<SummaryProps> = ({ user, lang }) => {
 
       {/* EDIT MODAL */}
       {editingEntry && (
-        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-slate-900/60 backdrop-blur-sm p-0 sm:p-4">
-          <div className="bg-white w-full sm:max-w-lg h-[80dvh] sm:h-auto rounded-t-[2.5rem] sm:rounded-[2.5rem] p-8 sm:p-10 shadow-2xl animate-in slide-in-from-bottom sm:zoom-in-95 duration-300">
-            <div className="flex justify-between items-center mb-8">
-              <h3 className="text-xl font-black text-slate-800">Editar Registro</h3>
-              <button onClick={() => setEditingEntry(null)} className="p-2"><X className="text-slate-400" /></button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-slide-up">
+            <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+              <h3 className="font-black text-slate-800 uppercase text-xs tracking-widest">Editar Ticket</h3>
+              <button
+                onClick={() => setEditingEntry(null)}
+                className="text-slate-400 hover:text-slate-600 p-2 hover:bg-slate-100 rounded-xl transition-all"
+              >
+                <X size={20} />
+              </button>
             </div>
-            <div className="space-y-6">
-              <div>
-                <label className="text-[10px] font-black text-slate-400 uppercase block mb-2">Importe</label>
-                <input type="number" step="0.01" inputMode="decimal" className="input-premium font-black text-xl text-blue-600" value={editingEntry.amount} onChange={e => setEditingEntry({ ...editingEntry, amount: parseFloat(e.target.value) })} />
+
+            <div className="p-5 overflow-y-auto max-h-[80vh] space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Fecha</label>
+                  <input
+                    type="date"
+                    value={editingEntry.dateJs ? editingEntry.dateJs.toISOString().slice(0, 10) : ''}
+                    onChange={e => setEditingEntry({ ...editingEntry, dateJs: new Date(e.target.value) })}
+                    className="input-premium font-bold text-sm py-2"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Importe</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    inputMode="decimal"
+                    value={editingEntry.amount}
+                    onChange={e => setEditingEntry({ ...editingEntry, amount: parseFloat(e.target.value) })}
+                    className="input-premium font-black text-blue-600 text-lg py-2"
+                  />
+                </div>
               </div>
-              <div>
-                <label className="text-[10px] font-black text-slate-400 uppercase block mb-2">Proveedor</label>
-                <input className="input-premium font-bold" value={editingEntry.provider} onChange={e => setEditingEntry({ ...editingEntry, provider: e.target.value })} />
+
+              <div className="space-y-1">
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Proveedor</label>
+                <input
+                  value={editingEntry.provider}
+                  onChange={e => setEditingEntry({ ...editingEntry, provider: e.target.value })}
+                  className="input-premium font-bold text-sm py-2"
+                />
               </div>
-              <button onClick={updateEntry} className="w-full btn-premium btn-premium-primary py-4 mt-4">Actualizar</button>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Categoría</label>
+                  <select
+                    value={editingEntry.category}
+                    onChange={e => setEditingEntry({ ...editingEntry, category: e.target.value })}
+                    className="input-premium font-bold appearance-none text-sm py-2"
+                  >
+                    <option value="comida">Comida</option>
+                    <option value="peajes">Peajes</option>
+                    <option value="gasolina">Gasolina</option>
+                    <option value="transporte">Transporte</option>
+                    <option value="alojamiento">Alojamiento</option>
+                    <option value="ocio">Ocio</option>
+                    <option value="servicios">Servicios</option>
+                    <option value="varios">Varios</option>
+                    <option value="ingreso">Ingreso</option>
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Pago</label>
+                  <select
+                    value={editingEntry.paidWith}
+                    onChange={e => setEditingEntry({ ...editingEntry, paidWith: e.target.value })}
+                    className="input-premium font-bold appearance-none text-sm py-2"
+                  >
+                    <option value="empresa">Empresa</option>
+                    <option value="personal">Personal</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Notas</label>
+                <textarea
+                  rows={3}
+                  value={editingEntry.notes || ''}
+                  onChange={e => setEditingEntry({ ...editingEntry, notes: e.target.value })}
+                  className="input-premium resize-none text-sm py-2"
+                ></textarea>
+              </div>
+            </div>
+
+            <div className="p-4 border-t border-slate-100 bg-slate-50 flex items-center justify-end gap-3">
+              <button
+                onClick={updateEntry}
+                className="btn-premium btn-premium-primary px-6 py-2 text-sm h-10 w-full md:w-auto"
+              >
+                <span>Guardar Cambios</span>
+                <ChevronRight size={16} />
+              </button>
             </div>
           </div>
         </div>
