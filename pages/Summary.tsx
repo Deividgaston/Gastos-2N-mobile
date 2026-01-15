@@ -304,7 +304,14 @@ const Summary: React.FC<SummaryProps> = ({ user, lang }) => {
         bodyStyles: { textColor: [51, 65, 85] },
         alternateRowStyles: { fillColor: [248, 250, 252] },
         styles: { fontSize: 9, font: "helvetica", cellPadding: 3 },
-        columnStyles: { 2: { halign: 'center' }, 3: { halign: 'center' }, 4: { halign: 'right', fontStyle: 'bold' } }
+        columnStyles: {
+          0: { cellWidth: 25 },
+          1: { cellWidth: 30 },
+          2: { cellWidth: 15, halign: 'center' },
+          3: { cellWidth: 15, halign: 'center' },
+          4: { cellWidth: 25, halign: 'right', fontStyle: 'bold' }, // Personal Cost
+          5: { cellWidth: 'auto' } // Notes (max space)
+        }
       });
 
       doc.save(`Expenses_2N_${month}.pdf`);
