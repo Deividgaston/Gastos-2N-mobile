@@ -75,12 +75,12 @@ const Admin: React.FC = () => {
     };
 
     const sendWhatsAppInvite = (email: string) => {
-        const inviteUrl = `${window.location.origin}${window.location.pathname}?auth=email`;
+        const inviteUrl = `${window.location.origin}${window.location.pathname}?auth=invite`;
         const message = `¡Hola! 👋 Has sido invitado a la plataforma de Gastos 2N. 
         
 Tu correo ya está autorizado: ${email}
 
-Para empezar, haz clic en este enlace y elige "Usar Email y Contraseña" para crear tu cuenta:
+Puedes acceder usando tu cuenta de Google o creando una con Email y Contraseña aquí:
 ${inviteUrl}`;
 
         const encoded = encodeURIComponent(message);
@@ -92,12 +92,12 @@ ${inviteUrl}`;
     };
 
     const copyInviteToClipboard = () => {
-        const inviteUrl = `${window.location.origin}${window.location.pathname}?auth=email`;
+        const inviteUrl = `${window.location.origin}${window.location.pathname}?auth=invite`;
         const textToCopy = `¡Hola! 👋 Has sido invitado a la plataforma de Gastos 2N.
 
 Tu correo ya está autorizado: ${showInviteModal.email}
 
-Para empezar, haz clic en este enlace y elige "Usar Email y Contraseña" para crear tu cuenta:
+Puedes acceder usando tu cuenta de Google o creando una con Email y Contraseña aquí:
 ${inviteUrl}`;
 
         navigator.clipboard.writeText(textToCopy);
@@ -267,7 +267,7 @@ ${inviteUrl}`;
                         <div className="p-8 space-y-6">
                             <div className="bg-slate-50 rounded-2xl p-6 border border-slate-100">
                                 <p className="text-sm font-bold text-slate-700 leading-relaxed whitespace-pre-wrap">
-                                    {`¡Hola! 👋 Has sido invitado a la plataforma de Gastos 2N.\n\nTu correo ya está autorizado: ${showInviteModal.email}\n\nPara empezar, haz clic en este enlace y elige "Usar Email y Contraseña" para crear tu cuenta:\n${window.location.origin}${window.location.pathname}?auth=email`}
+                                    {`¡Hola! 👋 Has sido invitado a la plataforma de Gastos 2N.\n\nTu correo ya está autorizado: ${showInviteModal.email}\n\nPuedes acceder usando tu cuenta de Google o creando una con Email y Contraseña aquí:\n${window.location.origin}${window.location.pathname}?auth=invite`}
                                 </p>
                             </div>
                             <button

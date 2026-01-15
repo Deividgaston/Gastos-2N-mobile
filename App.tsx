@@ -20,12 +20,12 @@ const App: React.FC = () => {
   const [password, setPassword] = useState('');
   const [isRegistering, setIsRegistering] = useState(false);
   const [showEmailLogin, setShowEmailLogin] = useState(false);
+  const [isInvited, setIsInvited] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.get('auth') === 'email') {
-      setShowEmailLogin(true);
-    }
+    if (params.get('auth') === 'email') setShowEmailLogin(true);
+    if (params.get('auth') === 'invite') setIsInvited(true);
   }, []);
 
   useEffect(() => {
@@ -120,8 +120,10 @@ const App: React.FC = () => {
   const handleLogin = async () => {
     const provider = new GoogleAuthProvider();
     try {
+      setLoading(true);
       await signInWithPopup(auth, provider);
     } catch (err: any) {
+      setLoading(false);
       if (err.code !== 'auth/popup-closed-by-user') {
         alert('Error login: ' + (err.message || ''));
       }
@@ -146,7 +148,6 @@ const App: React.FC = () => {
         const res = await signInWithEmailAndPassword(auth, cleanEmail, password);
         console.log("User signed in successfully:", res.user.email);
       }
-      // Note: checkAuthorization will trigger automatically via useEffect [user]
     } catch (err: any) {
       console.error("Auth error:", err);
       let msg = err.message;
@@ -185,6 +186,18 @@ const App: React.FC = () => {
           </div>
 
           <div className="premium-card p-8 space-y-6">
+            {isInvited && (
+              <div className="bg-blue-50 border border-blue-100 p-4 rounded-2xl flex items-center gap-3 animate-slide-up">
+                <div className="bg-blue-600 text-white p-2 rounded-xl">
+                  <ShieldCheck size={20} />
+                </div>
+                <div>
+                  <p className="text-[10px] font-black uppercase text-blue-600 tracking-widest">¡Bienvenido!</p>
+                  <p className="text-xs font-bold text-slate-700">Tu correo ya ha sido autorizado.</p>
+                </div>
+              </div>
+            )}
+
             {!showEmailLogin ? (
               <div className="space-y-4">
                 <button
@@ -213,54 +226,56 @@ const App: React.FC = () => {
                 </button>
               </div>
             ) : (
-              <form onSubmit={handleEmailAuth} className="space-y-4 animate-slide-up">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Email Address</label>
-                  <input
-                    type="email"
-                    required
-                    value={email}
-                    onChange={e => setEmail(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-blue-500 outline-none"
-                    placeholder="name@company.com"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Password</label>
-                  <input
-                    type="password"
-                    required
-                    value={password}
-                    onChange={e => setPassword(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-blue-500 outline-none"
-                    placeholder="••••••••"
-                  />
-                </div>
+              <div className="space-y-6">
+                <form onSubmit={handleEmailAuth} className="space-y-4 animate-slide-up">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Email Address</label>
+                    <input
+                      type="email"
+                      required
+                      value={email}
+                      onChange={e => setEmail(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-blue-500 outline-none"
+                      placeholder="name@company.com"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Password</label>
+                    <input
+                      type="password"
+                      required
+                      value={password}
+                      onChange={e => setPassword(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-blue-500 outline-none"
+                      placeholder="••••••••"
+                    />
+                  </div>
 
-                <button
-                  type="submit"
-                  className="w-full btn-premium py-4 bg-blue-600 text-white hover:bg-blue-500 shadow-xl shadow-blue-200"
-                >
-                  <span className="font-bold">{isRegistering ? 'Create Account' : 'Sign In Now'}</span>
-                </button>
+                  <button
+                    type="submit"
+                    className="w-full btn-premium py-4 bg-blue-600 text-white hover:bg-blue-500 shadow-xl shadow-blue-200"
+                  >
+                    <span className="font-bold">{isRegistering ? 'Create Account' : 'Sign In Now'}</span>
+                  </button>
 
-                <div className="flex flex-col gap-3 pt-4 border-t border-slate-100 text-center">
-                  <button
-                    type="button"
-                    onClick={() => setIsRegistering(!isRegistering)}
-                    className="text-xs font-black text-blue-600 uppercase tracking-widest"
-                  >
-                    {isRegistering ? 'Already have an account? Log In' : 'Need an account? Register'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowEmailLogin(false)}
-                    className="text-xs font-bold text-slate-400"
-                  >
-                    Go back to social login
-                  </button>
-                </div>
-              </form>
+                  <div className="flex flex-col gap-3 pt-4 border-t border-slate-100 text-center">
+                    <button
+                      type="button"
+                      onClick={() => setIsRegistering(!isRegistering)}
+                      className="text-xs font-black text-blue-600 uppercase tracking-widest"
+                    >
+                      {isRegistering ? 'Already have an account? Log In' : 'Need an account? Register'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowEmailLogin(false)}
+                      className="text-xs font-bold text-slate-400"
+                    >
+                      Go back to Google login
+                    </button>
+                  </div>
+                </form>
+              </div>
             )}
           </div>
 
