@@ -399,7 +399,16 @@ const Summary: React.FC<SummaryProps> = ({ user, lang }) => {
         }
       }
 
-      ws['!cols'] = [{ wch: 15 }, { wch: 25 }, { wch: 15 }, { wch: 15 }, { wch: 30 }, { wch: 12 }];
+      // --- AUTO-FIT COLUMNS ---
+      const colWidths = dataRows.reduce((acc, row) => {
+        row.forEach((cell, i) => {
+          const len = cell ? String(cell).length : 5;
+          if (!acc[i] || len > acc[i]) acc[i] = len;
+        });
+        return acc;
+      }, [] as number[]);
+
+      ws['!cols'] = colWidths.map(w => ({ wch: w + 4 })); // Add padding for better look
 
       XLSX.utils.book_append_sheet(wb, ws, "Report");
       XLSX.writeFile(wb, `Expenses_2N_${month}.xlsx`);
