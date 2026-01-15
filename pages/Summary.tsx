@@ -685,12 +685,12 @@ const Summary: React.FC<SummaryProps> = ({ user, lang }) => {
 };
 
 const StatBox = ({ label, value, icon, color }: any) => (
-  <div className={`p-6 rounded-[2rem] border transition-all hover:-translate-y-1 ${color === 'blue' ? 'bg-blue-600 border-blue-500 text-white shadow-xl shadow-blue-500/20' : 'bg-white border-slate-100 text-slate-800 shadow-sm'}`}>
-    <div className="flex items-center gap-3 mb-4 opacity-70">
+  <div className={`p-4 rounded-2xl border transition-all hover:-translate-y-1 ${color === 'blue' ? 'bg-blue-600 border-blue-500 text-white shadow-xl shadow-blue-500/20' : 'bg-white border-slate-100 text-slate-800 shadow-sm'}`}>
+    <div className="flex items-center gap-2 mb-2 opacity-70">
       {icon}
-      <span className="text-[10px] font-black uppercase tracking-[0.2em]">{label}</span>
+      <span className="text-[9px] font-black uppercase tracking-[0.2em]">{label}</span>
     </div>
-    <div className="text-3xl font-black tabular-nums">{value}</div>
+    <div className="text-2xl font-black tabular-nums">{value}</div>
   </div>
 );
 
@@ -698,14 +698,14 @@ const ActionCard = ({ title, desc, icon, onAction, color, loading, compact }: an
   <button
     onClick={onAction}
     disabled={loading}
-    className={`premium-card p-3 md:p-6 text-left hover:border-blue-300 transition-all active:scale-95 group w-full ${loading ? 'opacity-70' : ''}`}
+    className={`premium-card p-3 flex items-center gap-3 text-left hover:border-blue-300 transition-all active:scale-95 group w-full ${loading ? 'opacity-70' : ''}`}
   >
-    <div className={`w-8 h-8 md:w-10 md:h-10 rounded-xl ${color === 'blue' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 group-hover:bg-blue-600 group-hover:text-white'} flex items-center justify-center mb-2 md:mb-4 transition-colors`}>
-      {loading ? <Loader2 className="animate-spin" size={16} /> : icon}
+    <div className={`w-8 h-8 rounded-lg ${color === 'blue' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 group-hover:bg-blue-600 group-hover:text-white'} flex items-center justify-center transition-colors shrink-0`}>
+      {loading ? <Loader2 className="animate-spin" size={14} /> : icon}
     </div>
-    <div>
-      <h3 className="font-black text-slate-800 text-xs md:text-sm">{title}</h3>
-      {!compact && <p className="text-[10px] font-medium text-slate-400 mt-1 leading-snug">{desc}</p>}
+    <div className="min-w-0">
+      <h3 className="font-black text-slate-800 text-xs truncate">{title}</h3>
+      {!compact && <p className="text-[9px] font-medium text-slate-400 leading-tight truncate">{desc}</p>}
     </div>
   </button>
 );
