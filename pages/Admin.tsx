@@ -74,11 +74,13 @@ const Admin: React.FC = () => {
     };
 
     const sendWhatsAppInvite = (email: string) => {
-        const appUrl = window.location.origin;
-        const message = `Hola! 👋 Has sido invitado a la plataforma de Gastos 2N. 
-    Tu correo ya está autorizado: ${email}
-    Accede aquí: ${appUrl}
-    Introduce tu correo de Google para empezar.`;
+        const inviteUrl = `${window.location.origin}${window.location.pathname}?auth=email`;
+        const message = `¡Hola! 👋 Has sido invitado a la plataforma de Gastos 2N. 
+        
+Tu correo ya está autorizado: ${email}
+
+Para empezar, haz clic en este enlace y elige "Usar Email y Contraseña" para crear tu cuenta:
+${inviteUrl}`;
 
         const encoded = encodeURIComponent(message);
         window.open(`https://wa.me/?text=${encoded}`, '_blank');

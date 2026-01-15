@@ -22,6 +22,13 @@ const App: React.FC = () => {
   const [showEmailLogin, setShowEmailLogin] = useState(false);
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('auth') === 'email') {
+      setShowEmailLogin(true);
+    }
+  }, []);
+
+  useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (u) => {
       if (u) {
         setUser({ uid: u.uid, email: u.email || '' });
