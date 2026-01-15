@@ -151,147 +151,147 @@ const Mileage: React.FC<MileageProps> = ({ user, lang }) => {
   const calculatedOdometer = formData.km ? (lastOdometer || 0) + Number(formData.km) : (lastOdometer || 0);
 
   return (
-    <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 animate-fade-in">
+    <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 animate-fade-in">
       {/* FORM SECTION */}
-      <div className="lg:col-span-5 space-y-8">
-        <section className="premium-card p-6 md:p-8">
-          <div className="flex items-center gap-4 mb-8">
-            <div className="w-12 h-12 rounded-2xl bg-blue-600 text-white flex items-center justify-center shadow-lg shadow-blue-500/20">
-              <PlusCircle size={24} />
+      <div className="lg:col-span-5 space-y-6">
+        <section className="premium-card p-5">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-lg shadow-blue-500/20">
+              <PlusCircle size={20} />
             </div>
             <div>
-              <h2 className="text-xl font-black text-slate-800 tracking-tight">{t.formTitle}</h2>
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{t.title}</p>
+              <h2 className="text-lg font-black text-slate-800 tracking-tight">{t.formTitle}</h2>
+              <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">{t.title}</p>
             </div>
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Fecha</label>
+              <div className="space-y-1">
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Fecha</label>
                 <input
                   type="date"
                   value={formData.date}
                   onChange={e => setFormData({ ...formData, date: e.target.value })}
-                  className="input-premium font-bold"
+                  className="input-premium font-bold text-sm py-2"
                 />
               </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t.distance}</label>
+              <div className="space-y-1">
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">{t.distance}</label>
                 <input
                   type="number"
                   placeholder="0.0"
                   value={formData.km}
                   onChange={e => setFormData({ ...formData, km: e.target.value })}
-                  className="input-premium font-black text-lg text-blue-600"
+                  className="input-premium font-black text-base text-blue-600 py-2"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t.type}</label>
+              <div className="space-y-1">
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">{t.type}</label>
                 <div className="relative">
                   <select
                     value={formData.type}
                     onChange={e => setFormData({ ...formData, type: e.target.value })}
-                    className="input-premium font-bold appearance-none"
+                    className="input-premium font-bold appearance-none text-sm py-2"
                   >
                     <option value="empresa">{t.company}</option>
                     <option value="personal">{t.personal}</option>
                   </select>
-                  <ChevronRight size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 rotate-90" />
+                  <ChevronRight size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 rotate-90" />
                 </div>
               </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t.fuel}</label>
+              <div className="space-y-1">
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">{t.fuel}</label>
                 <div className="relative">
-                  <Fuel size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <Fuel size={12} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                   <input
                     type="number"
                     step="0.01"
                     placeholder="1.65"
                     value={formData.fuelPrice}
                     onChange={e => setFormData({ ...formData, fuelPrice: e.target.value })}
-                    className="input-premium pl-10 font-bold"
+                    className="input-premium pl-9 font-bold text-sm py-2"
                   />
                 </div>
               </div>
             </div>
 
             <div className="grid grid-cols-1 gap-4">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t.consumption}</label>
+              <div className="space-y-1">
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">{t.consumption}</label>
                 <div className="relative">
-                  <TrendingUp size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <TrendingUp size={12} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                   <input
                     type="number"
                     step="0.1"
                     value={formData.consumption}
                     onChange={e => setFormData({ ...formData, consumption: e.target.value })}
-                    className="input-premium pl-10 font-bold"
+                    className="input-premium pl-9 font-bold text-sm py-2"
                   />
                 </div>
               </div>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t.history}</label>
+            <div className="space-y-1">
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">{t.history}</label>
               <textarea
-                rows={3}
+                rows={2}
                 value={formData.notes}
                 onChange={e => setFormData({ ...formData, notes: e.target.value })}
-                className="input-premium resize-none"
+                className="input-premium resize-none text-sm py-2"
               ></textarea>
             </div>
 
-            <div className="bg-slate-900 rounded-[2rem] p-6 text-white relative overflow-hidden shadow-2xl border-b-4 border-blue-600">
+            <div className="bg-slate-900 rounded-2xl p-5 text-white relative overflow-hidden shadow-xl border-b-4 border-blue-600">
               <div className="absolute top-0 right-0 p-4 opacity-10">
-                <Gauge size={80} />
+                <Gauge size={60} />
               </div>
               <div className="relative z-10 flex items-center justify-between">
                 <div>
-                  <div className="text-[10px] font-black text-blue-400 uppercase tracking-[0.2em] mb-1">{t.odometer}</div>
-                  <div className="text-3xl font-black tabular-nums">{calculatedOdometer.toLocaleString()} <span className="text-xs font-medium opacity-40">km</span></div>
+                  <div className="text-[9px] font-black text-blue-400 uppercase tracking-[0.2em] mb-1">{t.odometer}</div>
+                  <div className="text-2xl font-black tabular-nums">{calculatedOdometer.toLocaleString()} <span className="text-[10px] font-medium opacity-40">km</span></div>
                 </div>
-                <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
-                  <TrendingUp size={20} className="text-blue-400" />
+                <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
+                  <TrendingUp size={16} className="text-blue-400" />
                 </div>
               </div>
             </div>
 
-            <div className="space-y-3 pt-2">
+            <div className="space-y-2 pt-1">
               <button
                 onClick={saveKm}
-                className="btn-premium btn-premium-primary w-full py-4 text-lg"
+                className="btn-premium btn-premium-primary w-full py-3 text-base h-12"
               >
                 <span>{t.save}</span>
-                <ChevronRight size={20} />
+                <ChevronRight size={18} />
               </button>
-              <div className="text-center h-4 text-[10px] font-black text-blue-500 uppercase tracking-[0.2em]">{status}</div>
+              <div className="text-center h-4 text-[9px] font-black text-blue-500 uppercase tracking-[0.2em]">{status}</div>
             </div>
           </div>
         </section>
 
         {/* SUMMARY CARD */}
-        <section className="bg-slate-800 rounded-[2rem] shadow-2xl p-8 text-white relative overflow-hidden group">
-          <Car size={120} className="absolute -right-8 -bottom-8 text-white/5 transform group-hover:-rotate-12 transition-transform duration-700" />
-          <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
-            <Info size={12} className="text-blue-400" />
+        <section className="bg-slate-800 rounded-2xl shadow-xl p-6 text-white relative overflow-hidden group">
+          <Car size={80} className="absolute -right-4 -bottom-4 text-white/5 transform group-hover:-rotate-12 transition-transform duration-700" />
+          <h3 className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+            <Info size={10} className="text-blue-400" />
             {t.statsTitle}
           </h3>
-          <div className="space-y-6 relative z-10">
-            <div className="flex justify-between items-end border-b border-white/5 pb-4">
+          <div className="space-y-4 relative z-10">
+            <div className="flex justify-between items-end border-b border-white/5 pb-3">
               <div>
-                <span className="text-slate-400 text-xs font-bold block mb-1">{t.company}</span>
+                <span className="text-slate-400 text-[10px] font-bold block mb-1">{t.company}</span>
               </div>
-              <span className="text-xl font-black">{kms.filter(k => k.type === 'empresa').reduce((a, b) => a + (Number(b.km || b.distance) || 0), 0).toFixed(1)} <span className="text-[10px] opacity-40">km</span></span>
+              <span className="text-lg font-black">{kms.filter(k => k.type === 'empresa').reduce((a, b) => a + (Number(b.km || b.distance) || 0), 0).toFixed(1)} <span className="text-[9px] opacity-40">km</span></span>
             </div>
-            <div className="flex justify-between items-end border-b border-white/5 pb-4">
+            <div className="flex justify-between items-end border-b border-white/5 pb-3">
               <div>
-                <span className="text-slate-400 text-xs font-bold block mb-1">{t.personal}</span>
+                <span className="text-slate-400 text-[10px] font-bold block mb-1">{t.personal}</span>
               </div>
-              <span className="text-xl font-black text-orange-400">{kms.filter(k => k.type === 'personal').reduce((a, b) => a + (Number(b.km || b.distance) || 0), 0).toFixed(1)} <span className="text-[10px] opacity-40">km</span></span>
+              <span className="text-lg font-black text-orange-400">{kms.filter(k => k.type === 'personal').reduce((a, b) => a + (Number(b.km || b.distance) || 0), 0).toFixed(1)} <span className="text-[9px] opacity-40">km</span></span>
             </div>
           </div>
         </section>

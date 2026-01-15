@@ -507,69 +507,69 @@ const Summary: React.FC<SummaryProps> = ({ user, lang }) => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8 animate-fade-in pb-10">
+    <div className="max-w-7xl mx-auto space-y-6 animate-fade-in pb-10">
       {/* HEADER & CONTROLS */}
-      <section className="premium-card p-6 md:p-10">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-10">
-          <div className="space-y-6">
+      <section className="premium-card p-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+          <div className="space-y-5">
             <div className="flex items-center gap-3">
-              <BarChart3 className="text-blue-600" size={24} />
-              <h2 className="text-3xl font-black text-slate-800 tracking-tight">{i18n.report}</h2>
+              <BarChart3 className="text-blue-600" size={20} />
+              <h2 className="text-2xl font-black text-slate-800 tracking-tight">{i18n.report}</h2>
             </div>
 
-            <div className="flex flex-wrap items-center gap-4">
+            <div className="flex flex-wrap items-center gap-3">
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => changeMonth(-1)}
-                  className="w-12 h-12 flex items-center justify-center rounded-xl bg-slate-100 text-slate-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm border border-slate-200 active:scale-95"
+                  className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100 text-slate-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm border border-slate-200 active:scale-95"
                 >
-                  <ChevronRight className="rotate-180" size={20} />
+                  <ChevronRight className="rotate-180" size={18} />
                 </button>
 
                 <div className="relative">
-                  <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                  <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                   <input
                     type="month"
                     value={month}
                     onChange={e => setMonth(e.target.value)}
-                    className="input-premium pl-12 font-bold w-48 h-12"
+                    className="input-premium pl-10 font-bold w-40 h-10 text-sm"
                   />
                 </div>
 
                 <button
                   onClick={() => changeMonth(1)}
-                  className="w-12 h-12 flex items-center justify-center rounded-xl bg-slate-100 text-slate-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm border border-slate-200 active:scale-95"
+                  className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100 text-slate-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm border border-slate-200 active:scale-95"
                 >
-                  <ChevronRight size={20} />
+                  <ChevronRight size={18} />
                 </button>
               </div>
 
-              <div className="flex bg-slate-100 p-1 rounded-2xl border border-slate-200 opacity-50 grayscale pointer-events-none">
-                <div className="px-4 py-2 rounded-xl text-[10px] font-black bg-white text-blue-600 shadow-sm">{lang}</div>
+              <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 opacity-50 grayscale pointer-events-none">
+                <div className="px-3 py-1.5 rounded-lg text-[9px] font-black bg-white text-blue-600 shadow-sm">{lang}</div>
               </div>
             </div>
           </div>
 
           {/* FINANCIAL SUMMARY CARD */}
-          <div className="bg-slate-900 rounded-[2.5rem] p-8 text-white md:min-w-[400px] shadow-2xl relative overflow-hidden border-b-8 border-blue-600 group transition-all hover:scale-[1.02]">
-            <div className="absolute -right-10 -top-10 opacity-5 group-hover:opacity-10 transition-opacity">
-              <Wallet size={200} />
+          <div className="bg-slate-900 rounded-3xl p-6 text-white md:min-w-[360px] shadow-2xl relative overflow-hidden border-b-4 border-blue-600 group transition-all hover:scale-[1.01]">
+            <div className="absolute -right-8 -top-8 opacity-5 group-hover:opacity-10 transition-opacity">
+              <Wallet size={140} />
             </div>
             <div className="relative z-10">
-              <div className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-400 mb-2">{i18n.reimbursement}</div>
-              <div className="flex justify-between items-end mb-2">
-                <span className="text-slate-400 text-xs font-bold">{lang === 'ES' ? 'A reembolsar' : lang === 'EN' ? 'To reimburse' : 'A reembolsar'}</span>
-                <span className="text-5xl font-extrabold tabular-nums tracking-tighter">{companyOwes.toFixed(2)}€</span>
+              <div className="text-[9px] font-black uppercase tracking-[0.3em] text-blue-400 mb-1">{i18n.reimbursement}</div>
+              <div className="flex justify-between items-end mb-1">
+                <span className="text-slate-400 text-[10px] font-bold">{lang === 'ES' ? 'A reembolsar' : lang === 'EN' ? 'To reimburse' : 'A reembolsar'}</span>
+                <span className="text-4xl font-extrabold tabular-nums tracking-tighter">{companyOwes.toFixed(2)}€</span>
               </div>
-              <div className="h-px bg-white/10 my-6"></div>
+              <div className="h-px bg-white/10 my-4"></div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <div className="text-[9px] font-black text-slate-500 uppercase mb-1">Pagado Pers.</div>
-                  <div className="font-bold text-sm text-slate-200">+{stats.personal.toFixed(2)}€</div>
+                  <div className="text-[8px] font-black text-slate-500 uppercase mb-0.5">Pagado Pers.</div>
+                  <div className="font-bold text-xs text-slate-200">+{stats.personal.toFixed(2)}€</div>
                 </div>
                 <div>
-                  <div className="text-[9px] font-black text-slate-500 uppercase mb-1">Deducir KM</div>
-                  <div className="font-bold text-sm text-orange-400">-{stats.kmCostPer.toFixed(2)}€</div>
+                  <div className="text-[8px] font-black text-slate-500 uppercase mb-0.5">Deducir KM</div>
+                  <div className="font-bold text-xs text-orange-400">-{stats.kmCostPer.toFixed(2)}€</div>
                 </div>
               </div>
             </div>
@@ -577,11 +577,11 @@ const Summary: React.FC<SummaryProps> = ({ user, lang }) => {
         </div>
 
         {/* PERSISTENT STATS */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-          <StatBox label={i18n.total} value={`${stats.total.toFixed(2)}€`} icon={<Wallet size={16} />} color="blue" />
-          <StatBox label={i18n.personal} value={`${stats.personal.toFixed(2)}€`} icon={<UserCheck size={16} />} color="slate" />
-          <StatBox label="KM Empresa" value={`${stats.kmEmp.toFixed(1)} km`} icon={<Briefcase size={16} />} color="slate" />
-          <StatBox label={i18n.km} value={`${stats.kmPer.toFixed(1)} km`} icon={<HomeIcon size={16} />} color="slate" />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <StatBox label={i18n.total} value={`${stats.total.toFixed(2)}€`} icon={<Wallet size={14} />} color="blue" />
+          <StatBox label={i18n.personal} value={`${stats.personal.toFixed(2)}€`} icon={<UserCheck size={14} />} color="slate" />
+          <StatBox label="KM Empresa" value={`${stats.kmEmp.toFixed(1)} km`} icon={<Briefcase size={14} />} color="slate" />
+          <StatBox label={i18n.km} value={`${stats.kmPer.toFixed(1)} km`} icon={<HomeIcon size={14} />} color="slate" />
         </div>
       </section>
 
