@@ -130,24 +130,31 @@ const App: React.FC = () => {
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) return alert('Email & Password required');
+    const cleanEmail = email.trim().toLowerCase();
+
+    if (!cleanEmail || !password) return alert('Email & Password required');
+    if (!cleanEmail.includes('@')) return alert('Invalid email format');
     if (password.length < 6) return alert('Password must be at least 6 characters');
 
     try {
-      console.log("Starting email auth...", { email, isRegistering });
+      console.log("Starting email auth...", { cleanEmail, isRegistering });
       setLoading(true);
       if (isRegistering) {
-        const res = await createUserWithEmailAndPassword(auth, email, password);
-        console.log("User created:", res.user.email);
+        const res = await createUserWithEmailAndPassword(auth, cleanEmail, password);
+        console.log("User created successfully:", res.user.email);
       } else {
-        const res = await signInWithEmailAndPassword(auth, email, password);
-        console.log("User signed in:", res.user.email);
+        const res = await signInWithEmailAndPassword(auth, cleanEmail, password);
+        console.log("User signed in successfully:", res.user.email);
       }
-      // Note: We don't call setLoading(false) here on success to keep spinner 
-      // visible until checkAuthorization finishes.
+      // Note: checkAuthorization will trigger automatically via useEffect [user]
     } catch (err: any) {
       console.error("Auth error:", err);
-      alert('Auth Error: ' + err.message);
+      let msg = err.message;
+      if (err.code === 'auth/invalid-email') msg = "El formato del email no es válido. Revisa que no haya espacios al final.";
+      if (err.code === 'auth/email-already-in-use') msg = "Este correo ya está registrado. Intenta iniciar sesión.";
+      if (err.code === 'auth/weak-password') msg = "La contraseña es muy débil. Usa al menos 6 caracteres.";
+
+      alert('Error de Autenticación: ' + msg);
       setLoading(false);
     }
   };
