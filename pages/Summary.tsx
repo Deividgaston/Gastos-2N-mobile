@@ -321,30 +321,36 @@ const Summary: React.FC<SummaryProps> = ({ user, lang }) => {
       const XLSX = (window as any).XLSX;
       if (!XLSX) throw new Error("XLSX library not loaded");
 
-      // "Drawn" visual layout for Excel
+      // "Drawn" visual layout for Excel with simulating borders/colors via text
       const dataRows = [
-        ["EXPENSES REPORT"],
-        [`Period: ${month}`],
+        ["================================================="],
+        ["          2N EXPENSES - MONTHLY REPORT           "],
+        ["================================================="],
+        [`PERIOD: ${month}`],
+        ["STATUS: OFFICIAL SUMMARY"],
         [],
-        ["SUMMARY SECTION"],
+        ["[ SUMMARY SECTION ]"],
         ["-------------------------------------------------"],
+        ["METRIC", "VALUE", "CURRENCY"],
         ["TOTAL MONTHLY EXPENSES", stats.total.toFixed(2), "EUR"],
         ["PAID WITH PERSONAL FUNDS", stats.personal.toFixed(2), "EUR"],
         ["COMPANY DEBT TO EMPLOYEE", companyOwes.toFixed(2), "EUR"],
         ["-------------------------------------------------"],
-        ["Km Company", stats.kmEmp.toFixed(1), "KM"],
-        ["Km Personal", stats.kmPer.toFixed(1), "KM"],
-        ["Personal Cost", stats.kmCostPer.toFixed(2), "EUR"],
+        ["Km Company (Professional)", stats.kmEmp.toFixed(1), "KM"],
+        ["Km Personal (Reimbursable)", stats.kmPer.toFixed(1), "KM"],
+        ["Personal Rebate Cost", stats.kmCostPer.toFixed(2), "EUR"],
+        ["-------------------------------------------------"],
         [],
-        ["DETAILED EXPENSES LIST"],
-        ["Date", "Vendor / Provider", "Category", "Payment Method", "Annotations", "Amount"],
-        ["----", "-----------------", "--------", "--------------", "-----------", "------"]
+        ["[ DETAILED EXPENSES LIST ]"],
+        ["---------------------------------------------------------------------------------"],
+        ["DATE", "VENDOR / PROVIDER", "CATEGORY", "METHOD", "NOTES", "AMOUNT"],
+        ["----------", "-----------------", "----------", "------", "--------------------", "------"]
       ];
 
       entries.forEach(e => {
         dataRows.push([
           e.dateJs?.toISOString().slice(0, 10),
-          e.provider,
+          e.provider.toUpperCase(),
           String(e.category).toUpperCase(),
           String(e.paidWith).toUpperCase(),
           e.notes || "-",
@@ -352,17 +358,27 @@ const Summary: React.FC<SummaryProps> = ({ user, lang }) => {
         ]);
       });
 
-      dataRows.push([], ["DETAILED MILEAGE LOG"], ["Date", "Trip Type", "Distance (KM)", "Fuel Price", "Est. Cons.", "Notes"], ["----", "---------", "-------------", "----------", "---------", "-----"]);
+      dataRows.push(
+        [],
+        ["[ DETAILED MILEAGE LOG ]"],
+        ["---------------------------------------------------------------------------------"],
+        ["DATE", "TRIP TYPE", "DISTANCE", "FUEL PRICE", "EST. CONS.", "NOTES"],
+        ["----------", "---------", "----------", "----------", "----------", "-----"]
+      );
+
       kms.forEach(k => {
         dataRows.push([
           k.dateJs?.toISOString().slice(0, 10),
           String(k.type).toUpperCase(),
-          (k.km || k.distance || 0),
-          (k.fuelPrice || 0),
-          (k.consumption || 6.0),
+          (k.km || k.distance || 0).toFixed(1),
+          (k.fuelPrice || 0).toFixed(2),
+          (k.consumption || 6.0).toFixed(1),
           k.notes || "-"
         ]);
       });
+
+      dataRows.push(["---------------------------------------------------------------------------------"]);
+      dataRows.push(["END OF REPORT"]);
 
       const ws = XLSX.utils.aoa_to_sheet(dataRows);
 
