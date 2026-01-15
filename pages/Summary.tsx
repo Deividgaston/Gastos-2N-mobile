@@ -63,14 +63,14 @@ const Summary: React.FC<SummaryProps> = ({ user, lang }) => {
       if (user) {
         const qExpenses = query(
           collection(db, `users/${user.uid}/entries`),
-          where('date', '>=', start),
-          where('date', '<', end),
+          where('date', '>=', Timestamp.fromDate(start)),
+          where('date', '<', Timestamp.fromDate(end)),
           orderBy('date', 'desc')
         );
         const qKms = query(
           collection(db, `users/${user.uid}/kms`),
-          where('date', '>=', start),
-          where('date', '<', end)
+          where('date', '>=', Timestamp.fromDate(start)),
+          where('date', '<', Timestamp.fromDate(end))
         );
 
         const [expenseSnap, kmSnap] = await Promise.all([getDocs(qExpenses), getDocs(qKms)]);
