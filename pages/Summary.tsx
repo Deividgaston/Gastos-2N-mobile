@@ -24,9 +24,7 @@ import {
   X,
   BarChart3
 } from 'lucide-react';
-import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
-import { default as JSZip } from 'jszip';
+// Eliminados imports de node_modules para usar versiones de CDN (window) más estables con plugins
 
 import { translations, Language } from '../utils/translations';
 
@@ -161,19 +159,33 @@ const Summary: React.FC<SummaryProps> = ({ user, lang }) => {
   const i18n = translations[lang].summary;
 
   const buildPdf = () => {
-    const doc = new jsPDF();
-    doc.setFontSize(22); doc.setTextColor(30, 41, 59);
-    doc.text(`${i18n.report} - ${month}`, 14, 20);
-    doc.setFontSize(10); doc.setTextColor(100, 116, 139);
-    doc.text(`User: ${user?.email || 'Local'}`, 14, 28);
+    try {
+      // Usar la versión global si está disponible para asegurar compatibilidad con autotable
+      const { jsPDF } = (window as any).jspdf;
+      const doc = new jsPDF();
 
-    (doc as any).autoTable({
-      startY: 40,
-      head: [[i18n.date, i18n.provider, i18n.category, i18n.pay, i18n.amount]],
-      body: entries.map(e => [e.dateJs?.toISOString().slice(0, 10), e.provider, e.category, e.paidWith, `${Number(e.amount).toFixed(2)}€`]),
-      headStyles: { fillColor: [30, 41, 59] }
-    });
-    doc.save(`Expenses_${month}_${lang}.pdf`);
+      doc.setFontSize(22); doc.setTextColor(30, 41, 59);
+      doc.text(`${i18n.report} - ${month}`, 14, 20);
+      doc.setFontSize(10); doc.setTextColor(100, 116, 139);
+      doc.text(`User: ${user?.email || 'Local'}`, 14, 28);
+
+      (doc as any).autoTable({
+        startY: 40,
+        head: [[i18n.date, i18n.provider, i18n.category, i18n.pay, i18n.amount]],
+        body: entries.map(e => [
+          e.dateJs?.toISOString().slice(0, 10),
+          e.provider,
+          e.category,
+          e.paidWith,
+          `${Number(e.amount).toFixed(2)}€`
+        ]),
+        headStyles: { fillColor: [30, 41, 59] }
+      });
+      doc.save(`Expenses_${month}_${lang}.pdf`);
+    } catch (err) {
+      console.error("Error generating PDF:", err);
+      alert("Error al generar PDF. Asegúrate de que las librerías están cargadas.");
+    }
   };
 
   const exportExcel = async () => {
@@ -181,8 +193,15 @@ const Summary: React.FC<SummaryProps> = ({ user, lang }) => {
     setIsExporting('excel');
     try {
       const XLSX = (window as any).XLSX;
-      const templateUrl = `${(import.meta as any).env.BASE_URL}plantilla-2n.xlsx`;
+      if (!XLSX) throw new Error("XLSX library not loaded");
+
+      // Ajuste de ruta para la plantilla en GitHub Pages o Local
+      const baseUrl = (import.meta as any).env.BASE_URL || '/';
+      const templateUrl = `${baseUrl.endsWith('/') ? baseUrl : baseUrl + '/'}plantilla-2n.xlsx`;
+
       const resp = await fetch(templateUrl);
+      if (!resp.ok) throw new Error(`Template not found at ${templateUrl}`);
+
       const dataArr = await resp.arrayBuffer();
       const wb = XLSX.read(dataArr, { type: 'array' });
       const ws = wb.Sheets[wb.SheetNames[0]];
@@ -204,27 +223,44 @@ const Summary: React.FC<SummaryProps> = ({ user, lang }) => {
       });
 
       XLSX.writeFile(wb, `Report_${month}_${lang}.xlsx`);
-    } catch (e) { console.error(e); } finally { setIsExporting(null); }
+    } catch (e) {
+      console.error("Excel Export Error:", e);
+      alert(`Error al exportar Excel: ${e instanceof Error ? e.message : 'Error desconocido'}`);
+    } finally {
+      setIsExporting(null);
+    }
   };
 
   const exportZip = async () => {
     const withPhotos = entries.filter(e => e.photoPath);
-    if (!withPhotos.length) return alert('No photos');
+    if (!withPhotos.length) return alert('No hay fotos para descargar');
     setIsExporting('zip');
     try {
+      const JSZip = (window as any).JSZip;
+      if (!JSZip) throw new Error("JSZip library not loaded");
+
       const zip = new JSZip();
       for (const e of withPhotos) {
-        const url = await getDownloadURL(ref(storage, e.photoPath));
-        const resp = await fetch(url);
-        const blob = await resp.blob();
-        zip.file(`${e.dateJs?.toISOString().slice(0, 10)}_${e.provider || 'ticket'}.jpg`, blob);
+        try {
+          const url = await getDownloadURL(ref(storage, e.photoPath));
+          const resp = await fetch(url);
+          const blob = await resp.blob();
+          zip.file(`${e.dateJs?.toISOString().slice(0, 10)}_${e.provider || 'ticket'}.jpg`, blob);
+        } catch (err) {
+          console.warn(`Error fetching photo for ${e.provider}:`, err);
+        }
       }
       const content = await zip.generateAsync({ type: 'blob' });
       const link = document.createElement('a');
       link.href = URL.createObjectURL(content);
       link.download = `Tickets_${month}.zip`;
       link.click();
-    } catch (e) { console.error(e); } finally { setIsExporting(null); }
+    } catch (e) {
+      console.error("ZIP Export Error:", e);
+      alert(`Error al generar ZIP: ${e instanceof Error ? e.message : 'Error desconocido'}`);
+    } finally {
+      setIsExporting(null);
+    }
   };
 
   return (
