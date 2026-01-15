@@ -194,71 +194,98 @@ const Summary: React.FC<SummaryProps> = ({ user, lang }) => {
       };
 
       // Header
-      doc.setFontSize(22); doc.setTextColor(0, 0, 0); doc.setFont("helvetica", "bold");
-      doc.text(L.title, 14, 20);
-      doc.setFontSize(12); doc.setFont("helvetica", "normal"); doc.setTextColor(50, 50, 50);
-      doc.text(`${L.monthLabel} ${month}`, 14, 30);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(26); doc.setTextColor(15, 23, 42); // slate-900
+      doc.text(L.title, 14, 25);
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(12); doc.setTextColor(100, 116, 139); // slate-500
+      doc.text(`${L.monthLabel} ${month}`, 14, 35);
 
       // --- Summary Cards Section ---
-      const cardHeight = 35;
-      const cardWidth = 85;
-      const cardY = 40;
+      const cardHeight = 38;
+      const cardWidth = 88;
+      const cardY = 45;
 
-      // Expenses Card
-      doc.setDrawColor(200, 200, 200); doc.setFillColor(255, 255, 255);
-      (doc as any).roundedRect(14, cardY, cardWidth, cardHeight, 5, 5, "FD");
-      doc.setTextColor(0, 0, 0); doc.setFontSize(11); doc.setFont("helvetica", "bold");
-      doc.text(L.expSum, 20, cardY + 8);
-      doc.setFontSize(10); doc.setFont("helvetica", "normal");
-      doc.text(`${L.totalExp} ${stats.total.toFixed(2)} €`, 20, cardY + 16);
-      doc.text(`${L.paidMe} ${stats.personal.toFixed(2)} €`, 20, cardY + 22);
-      doc.text(`${L.compOwes} ${companyOwes.toFixed(2)} €`, 20, cardY + 28);
+      // Card Style Helper
+      const drawCard = (x: number, y: number, title: string, lines: string[]) => {
+        // Shadow simulation
+        doc.setDrawColor(241, 245, 249); doc.setFillColor(241, 245, 249);
+        (doc as any).roundedRect(x + 1, y + 1, cardWidth, cardHeight, 4, 4, "F");
 
-      // Mileage Card
-      (doc as any).roundedRect(110, cardY, cardWidth, cardHeight, 5, 5, "FD");
-      doc.setFont("helvetica", "bold");
-      doc.text(L.milSum, 116, cardY + 8);
-      doc.setFontSize(10); doc.setFont("helvetica", "normal");
-      doc.text(`${L.compMil} ${stats.kmEmp.toFixed(1)} km`, 116, cardY + 16);
-      doc.text(`${L.persMil} ${stats.kmPer.toFixed(1)} km`, 116, cardY + 22);
-      doc.text(`${L.persCost} ${stats.kmCostPer.toFixed(2)} €`, 116, cardY + 28);
+        // Main Card
+        doc.setDrawColor(226, 232, 240); doc.setFillColor(255, 255, 255);
+        (doc as any).roundedRect(x, y, cardWidth, cardHeight, 4, 4, "FD");
+
+        // Content
+        doc.setTextColor(15, 23, 42); doc.setFontSize(11); doc.setFont("helvetica", "bold");
+        doc.text(title, x + 6, y + 10);
+
+        doc.setFont("helvetica", "normal"); doc.setFontSize(10);
+        lines.forEach((line, idx) => {
+          doc.text(line, x + 6, y + 18 + (idx * 7));
+        });
+      };
+
+      drawCard(14, cardY, L.expSum, [
+        `${L.totalExp} ${stats.total.toFixed(2)} €`,
+        `${L.paidMe} ${stats.personal.toFixed(2)} €`,
+        `${L.compOwes} ${companyOwes.toFixed(2)} €`
+      ]);
+
+      drawCard(108, cardY, L.milSum, [
+        `${L.compMil} ${stats.kmEmp.toFixed(1)} km`,
+        `${L.persMil} ${stats.kmPer.toFixed(1)} km`,
+        `${L.persCost} ${stats.kmCostPer.toFixed(2)} €`
+      ]);
 
       // --- Expenses Table ---
       (doc as any).autoTable({
-        startY: 85,
+        startY: 95,
         head: [[L.hDate, L.hProvider, L.hCat, L.hPaid, L.hNotes, L.hAmt]],
         body: entries.map(e => [
           e.dateJs?.toISOString().slice(0, 10),
           e.provider,
           e.category,
-          e.paidWith,
-          e.notes || "",
-          `${Number(e.amount).toFixed(2)}`
+          e.paidWith.toUpperCase(),
+          e.notes || "-",
+          Number(e.amount).toFixed(2)
         ]),
-        headStyles: { fillColor: [0, 0, 0], textColor: [255, 255, 255], fontStyle: "bold" },
-        alternateRowStyles: { fillColor: [245, 245, 245] },
-        styles: { fontSize: 9 }
+        headStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255], fontStyle: "bold", halign: 'left' },
+        bodyStyles: { textColor: [51, 65, 85] },
+        alternateRowStyles: { fillColor: [248, 250, 252] },
+        styles: { fontSize: 9, font: "helvetica", cellPadding: 3 },
+        columnStyles: { 5: { halign: 'right', fontStyle: 'bold' } }
       });
 
       // --- Mileage Table ---
-      const finalY = (doc as any).lastAutoTable.finalY + 10;
+      const finalY = (doc as any).lastAutoTable.finalY + 12;
       (doc as any).autoTable({
         startY: finalY,
         head: [[L.hDate, L.hType, L.hKm, L.hFuel, L.hCost, L.hNotes]],
-        body: kms.map(k => [
-          k.dateJs?.toISOString().slice(0, 10),
-          String(k.type).toUpperCase(),
-          (k.km || k.distance || 0).toFixed(1),
-          k.fuelPrice?.toFixed(2) || "-",
-          String(k.type).toLowerCase().includes('per') ? stats.kmCostPer.toFixed(2) : "-",
-          k.notes || ""
-        ]),
-        headStyles: { fillColor: [0, 0, 0], textColor: [255, 255, 255], fontStyle: "bold" },
-        alternateRowStyles: { fillColor: [245, 245, 245] },
-        styles: { fontSize: 9 }
+        body: kms.map(k => {
+          const isPersonal = String(k.type).toLowerCase().includes('per');
+          let cost = "-";
+          if (isPersonal && k.fuelPrice) {
+            cost = ((Number(k.km || k.distance) || 0) * k.fuelPrice * ((k.consumption || 6.0) / 100)).toFixed(2);
+          }
+          return [
+            k.dateJs?.toISOString().slice(0, 10),
+            String(k.type).toUpperCase(),
+            (k.km || k.distance || 0).toFixed(1),
+            k.fuelPrice?.toFixed(2) || "-",
+            cost,
+            k.notes || "-"
+          ];
+        }),
+        headStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255], fontStyle: "bold", halign: 'left' },
+        bodyStyles: { textColor: [51, 65, 85] },
+        alternateRowStyles: { fillColor: [248, 250, 252] },
+        styles: { fontSize: 9, font: "helvetica", cellPadding: 3 },
+        columnStyles: { 2: { halign: 'center' }, 3: { halign: 'center' }, 4: { halign: 'right', fontStyle: 'bold' } }
       });
 
-      doc.save(`Expenses_${month}_EN.pdf`);
+      doc.save(`Expenses_2N_${month}.pdf`);
     } catch (err) {
       console.error("Error generating PDF:", err);
       alert("Error generating PDF. Please ensure libraries are loaded.");
@@ -266,60 +293,72 @@ const Summary: React.FC<SummaryProps> = ({ user, lang }) => {
   };
 
   const exportExcel = async () => {
-    if (!entries.length) return alert('Empty data');
+    if (!entries.length) return alert('No data to export');
     setIsExporting('excel');
     try {
       const XLSX = (window as any).XLSX;
       if (!XLSX) throw new Error("XLSX library not loaded");
 
-      // Forced English
+      // Forced English layout
       const dataRows = [
-        ["2N Expenses - Monthly Summary"],
-        [`Month: ${month}`],
+        ["2N EXPENSES - MONTHLY SUMMARY"],
+        [`Report Period: ${month}`],
         [],
-        ["SUMMARY"],
-        ["Total expenses:", stats.total.toFixed(2)],
-        ["Paid with my money:", stats.personal.toFixed(2)],
-        ["Company owes me:", companyOwes.toFixed(2)],
-        ["Company mileage:", stats.kmEmp.toFixed(1)],
-        ["Personal mileage:", stats.kmPer.toFixed(1)],
-        ["Personal mileage cost:", stats.kmCostPer.toFixed(2)],
+        ["SUMMARY SECTION"],
+        ["Metric", "Value", "Unit"],
+        ["Total Monthly Expenses", stats.total.toFixed(2), "EUR"],
+        ["Paid with Personal Funds", stats.personal.toFixed(2), "EUR"],
+        ["Company Debt to Employee", companyOwes.toFixed(2), "EUR"],
+        ["Total Company Mileage", stats.kmEmp.toFixed(1), "KM"],
+        ["Total Personal Mileage", stats.kmPer.toFixed(1), "KM"],
+        ["Personal Mileage Cost", stats.kmCostPer.toFixed(2), "EUR"],
         [],
-        ["EXPENSES LIST"],
-        ["Date", "Provider", "Category", "Paid with", "Notes", "Amount"]
+        ["DETAILED EXPENSES"],
+        ["Date", "Vendor / Provider", "Category", "Payment Method", "Annotations", "Amount (EUR)"]
       ];
 
       entries.forEach(e => {
         dataRows.push([
           e.dateJs?.toISOString().slice(0, 10),
           e.provider,
-          e.category,
-          e.paidWith,
-          e.notes || "",
+          String(e.category).toUpperCase(),
+          String(e.paidWith).toUpperCase(),
+          e.notes || "-",
           e.amount
         ]);
       });
 
-      dataRows.push([], ["MILEAGE LIST"], ["Date", "Type", "KM", "Fuel Price", "Consumption", "Notes"]);
+      dataRows.push([], ["DETAILED MILEAGE LOG"], ["Date", "Trip Type", "Distance (KM)", "Fuel Price (€/L)", "Est. Consumption", "Notes"]);
       kms.forEach(k => {
         dataRows.push([
           k.dateJs?.toISOString().slice(0, 10),
-          k.type,
-          k.km || k.distance || 0,
-          k.fuelPrice || 0,
-          k.consumption || 6.0,
-          k.notes || ""
+          String(k.type).toUpperCase(),
+          (k.km || k.distance || 0),
+          (k.fuelPrice || 0),
+          (k.consumption || 6.0),
+          k.notes || "-"
         ]);
       });
 
       const ws = XLSX.utils.aoa_to_sheet(dataRows);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Summary");
 
-      XLSX.writeFile(wb, `Report_${month}_EN.xlsx`);
+      // Basic aesthetic sizing (not supported by all XLSX viewers but helps in some)
+      ws['!cols'] = [
+        { wch: 15 }, // Date
+        { wch: 30 }, // Provider
+        { wch: 20 }, // Category
+        { wch: 15 }, // Paid with
+        { wch: 40 }, // Notes
+        { wch: 12 }, // Amount
+      ];
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "MonthlyReport");
+
+      XLSX.writeFile(wb, `Expenses_2N_${month}.xlsx`);
     } catch (e) {
       console.error("Excel Export Error:", e);
-      alert(`Error exporting Excel: ${e instanceof Error ? e.message : 'Unknown error'}`);
+      alert(`Export failed: ${e instanceof Error ? e.message : 'Unknown error'}`);
     } finally {
       setIsExporting(null);
     }
