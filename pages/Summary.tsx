@@ -162,9 +162,21 @@ const Summary: React.FC<SummaryProps> = ({ user, lang }) => {
 
   /* ================= EXPORTS ================= */
 
+  const getLogoBase64 = async () => {
+    try {
+      const resp = await fetch('logo.png');
+      const blob = await resp.blob();
+      return new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.readAsDataURL(blob);
+      });
+    } catch { return null; }
+  };
+
   const i18n = translations[lang].summary;
 
-  const buildPdf = () => {
+  const buildPdf = async () => {
     try {
       const { jsPDF } = (window as any).jspdf;
       const doc = new jsPDF();
@@ -192,6 +204,11 @@ const Summary: React.FC<SummaryProps> = ({ user, lang }) => {
         hFuel: "€/L",
         hCost: "Personal cost"
       };
+
+      const logoBase64 = await getLogoBase64();
+      if (logoBase64) {
+        doc.addImage(logoBase64, 'PNG', 175, 12, 18, 18);
+      }
 
       // Header
       doc.setFont("helvetica", "bold");
@@ -301,7 +318,7 @@ const Summary: React.FC<SummaryProps> = ({ user, lang }) => {
 
       // Forced English layout
       const dataRows = [
-        ["2N EXPENSES - MONTHLY SUMMARY"],
+        ["SYSTEM: 2N EXPENSES - MONTHLY SUMMARY"],
         [`Report Period: ${month}`],
         [],
         ["SUMMARY SECTION"],

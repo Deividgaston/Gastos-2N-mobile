@@ -56,8 +56,8 @@ const App: React.FC = () => {
           <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
             <div className="flex items-center gap-2 md:gap-8">
               <Link to="/" className="flex items-center gap-3 group">
-                <div className="bg-slate-900 text-white p-2 rounded-xl group-hover:bg-blue-600 transition-all duration-300 shadow-lg">
-                  <span className="font-bold text-xs tracking-tighter">2N</span>
+                <div className="bg-slate-900 rounded-xl group-hover:bg-blue-600 transition-all duration-300 shadow-lg overflow-hidden flex items-center justify-center w-10 h-10">
+                  <img src="logo.png" alt="2N Logo" className="w-8 h-8 object-contain" />
                 </div>
                 <h1 className="hidden sm:block font-extrabold text-slate-800 tracking-tight text-lg">Gastos 2N</h1>
               </Link>
