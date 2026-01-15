@@ -186,16 +186,16 @@ const Home: React.FC<HomeProps> = ({ user, lang }) => {
           <p className="text-sm font-medium text-slate-400">{translations[lang].home.scanDesc}</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <button
             onClick={() => handleScan(true)}
-            className="group relative overflow-hidden flex flex-col items-center justify-center gap-4 p-8 bg-slate-900 text-white rounded-[2rem] shadow-2xl transition-all active:scale-95 border-b-4 border-blue-600"
+            className="group relative overflow-hidden flex flex-col items-center justify-center gap-3 p-5 bg-slate-900 text-white rounded-2xl shadow-xl transition-all active:scale-95 border-b-4 border-blue-600"
           >
-            <div className="w-14 h-14 bg-blue-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-500 shadow-xl shadow-blue-500/20">
-              <Camera size={28} />
+            <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-500 shadow-lg shadow-blue-500/20">
+              <Camera size={20} />
             </div>
             <div className="text-center">
-              <span className="font-bold text-lg block">{t.scan}</span>
+              <span className="font-bold text-sm block">{t.scan}</span>
               <span className="text-[9px] font-black uppercase tracking-[0.2em] opacity-40">Cámara</span>
             </div>
           </button>
@@ -206,13 +206,13 @@ const Home: React.FC<HomeProps> = ({ user, lang }) => {
               setFormData({ date: new Date().toISOString().slice(0, 10), amount: 0, provider: '', category: 'varios', paidWith: 'empresa', notes: '' });
               setShowReviewModal(true);
             }}
-            className="group flex flex-col items-center justify-center gap-4 p-8 bg-white border border-slate-200 hover:border-blue-200 hover:bg-blue-50/30 text-slate-800 rounded-[2rem] transition-all active:scale-95"
+            className="group flex flex-col items-center justify-center gap-3 p-5 bg-white border border-slate-200 hover:border-blue-200 hover:bg-blue-50/30 text-slate-800 rounded-2xl transition-all active:scale-95"
           >
-            <div className="w-14 h-14 bg-slate-50 group-hover:bg-blue-100 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-500 text-blue-600 shadow-sm">
-              <Plus size={28} />
+            <div className="w-10 h-10 bg-slate-50 group-hover:bg-blue-100 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-500 text-blue-600 shadow-sm">
+              <Plus size={20} />
             </div>
             <div className="text-center">
-              <span className="font-bold text-lg block">{t.manual}</span>
+              <span className="font-bold text-sm block">{t.manual}</span>
               <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-300">Sin IA</span>
             </div>
           </button>
@@ -221,50 +221,50 @@ const Home: React.FC<HomeProps> = ({ user, lang }) => {
 
       {/* RECENT LIST */}
       <section className="premium-card overflow-hidden">
-        <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+        <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center text-slate-400 shadow-sm border border-slate-100">
-              <History size={16} />
+            <div className="w-7 h-7 rounded-lg bg-white flex items-center justify-center text-slate-400 shadow-sm border border-slate-100">
+              <History size={14} />
             </div>
-            <h2 className="text-lg font-bold text-slate-800">{t.recent}</h2>
+            <h2 className="text-base font-bold text-slate-800">{t.recent}</h2>
           </div>
-          <span className="text-[10px] font-black text-blue-500 bg-blue-50 px-3 py-1 rounded-full uppercase tracking-wider">{t.last5}</span>
+          <span className="text-[9px] font-black text-blue-500 bg-blue-50 px-2 py-1 rounded-full uppercase tracking-wider">{t.last5}</span>
         </div>
         <div className="divide-y divide-slate-100">
           {entries.length > 0 ? entries.map((e, idx) => (
-            <div key={idx} className="p-5 hover:bg-slate-50/80 transition-all flex items-center justify-between group cursor-pointer">
-              <div className="flex items-center gap-5">
-                <div className="w-12 h-12 rounded-[1rem] bg-white border border-slate-100 flex items-center justify-center text-slate-400 shadow-sm group-hover:bg-blue-600 group-hover:text-white group-hover:border-transparent transition-all duration-300">
-                  <i className={`fa-solid ${getCategoryIcon(e.category)} text-xl`}></i>
+            <div key={idx} className="p-4 hover:bg-slate-50/80 transition-all flex items-center justify-between group cursor-pointer">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-slate-400 shadow-sm group-hover:bg-blue-600 group-hover:text-white group-hover:border-transparent transition-all duration-300">
+                  <i className={`fa-solid ${getCategoryIcon(e.category)} text-sm`}></i>
                 </div>
                 <div>
-                  <div className="font-bold text-slate-800 group-hover:text-blue-600 transition-colors uppercase tracking-tight">{e.provider || '...'}</div>
-                  <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
-                    <Clock size={10} />
+                  <div className="font-bold text-slate-800 text-sm group-hover:text-blue-600 transition-colors uppercase tracking-tight">{e.provider || '...'}</div>
+                  <div className="flex items-center gap-2 text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
+                    <Clock size={9} />
                     {e.dateJs?.toISOString().slice(0, 10)}
                     <span className="w-1 h-1 rounded-full bg-slate-200"></span>
-                    <Tag size={10} className="ml-1" />
+                    <Tag size={9} className="ml-1" />
                     {e.category}
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
                 <div className="text-right">
-                  <div className="font-black text-slate-900 text-lg">{e.amount.toFixed(2)}€</div>
-                  <div className="flex items-center justify-end gap-1 text-[9px] font-black text-slate-400 uppercase tracking-tighter">
-                    <CreditCard size={9} />
+                  <div className="font-black text-slate-900 text-base">{e.amount.toFixed(2)}€</div>
+                  <div className="flex items-center justify-end gap-1 text-[8px] font-black text-slate-400 uppercase tracking-tighter">
+                    <CreditCard size={8} />
                     {e.paidWith}
                   </div>
                 </div>
-                <ChevronRight size={18} className="text-slate-300 transform group-hover:translate-x-1 transition-transform" />
+                <ChevronRight size={16} className="text-slate-300 transform group-hover:translate-x-1 transition-transform" />
               </div>
             </div>
           )) : (
-            <div className="p-16 text-center">
-              <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-dashed border-slate-200 text-slate-300">
-                <Plus size={32} />
+            <div className="p-12 text-center">
+              <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-dashed border-slate-200 text-slate-300">
+                <Plus size={24} />
               </div>
-              <p className="font-bold text-slate-400">{t.empty}</p>
+              <p className="font-bold text-slate-400 text-sm">{t.empty}</p>
             </div>
           )}
         </div>
@@ -273,64 +273,64 @@ const Home: React.FC<HomeProps> = ({ user, lang }) => {
       {/* REVIEW MODAL */}
       {showReviewModal && (
         <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-slate-900/60 backdrop-blur-md p-0 sm:p-4 animate-in fade-in duration-300">
-          <div className="bg-white w-full max-h-[85dvh] sm:h-auto sm:max-h-[90vh] sm:max-w-lg rounded-t-[2rem] sm:rounded-[2rem] shadow-2xl overflow-hidden flex flex-col animate-in slide-in-from-bottom duration-500">
-            <div className="p-5 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white/80 backdrop-blur-md z-10">
-              <h2 className="text-xl font-black text-slate-800">{t.modalTitle}</h2>
-              <button onClick={() => setShowReviewModal(false)} className="w-10 h-10 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 transition-colors">
-                <Plus className="rotate-45" size={24} />
+          <div className="bg-white w-full max-h-[85vh] sm:h-auto sm:max-h-[85vh] sm:max-w-md rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-in slide-in-from-bottom duration-500">
+            <div className="p-4 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white/80 backdrop-blur-md z-10">
+              <h2 className="text-lg font-black text-slate-800">{t.modalTitle}</h2>
+              <button onClick={() => setShowReviewModal(false)} className="w-8 h-8 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 transition-colors">
+                <Plus className="rotate-45" size={20} />
               </button>
             </div>
 
-            <div className="p-6 sm:p-8 overflow-y-auto flex-1 space-y-6">
+            <div className="p-5 overflow-y-auto flex-1 space-y-5">
               {isProcessing && (
-                <div className="bg-blue-600 rounded-2xl p-6 flex flex-col items-center gap-4 shadow-xl shadow-blue-500/20 text-white animate-pulse">
-                  <Loader2 className="animate-spin" size={32} />
+                <div className="bg-blue-600 rounded-xl p-4 flex flex-col items-center gap-3 shadow-lg shadow-blue-500/20 text-white animate-pulse">
+                  <Loader2 className="animate-spin" size={24} />
                   <div className="text-center">
-                    <span className="block font-bold text-lg">{t.processing}</span>
-                    <span className="text-[10px] font-black uppercase tracking-widest opacity-60">{t.iaWarning}</span>
+                    <span className="block font-bold text-sm">{t.processing}</span>
+                    <span className="text-[9px] font-black uppercase tracking-widest opacity-60">{t.iaWarning}</span>
                   </div>
                 </div>
               )}
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">{t.date}</label>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">{t.date}</label>
                   <input
                     type="date"
                     value={formData.date}
                     onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
-                    className="input-premium font-bold"
+                    className="input-premium font-bold text-sm py-2"
                   />
                 </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">{t.amount}</label>
+                <div className="space-y-1">
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">{t.amount}</label>
                   <input
                     type="number"
                     step="0.01"
                     inputMode="decimal"
                     value={formData.amount}
                     onChange={(e) => setFormData(prev => ({ ...prev, amount: parseFloat(e.target.value) }))}
-                    className="input-premium font-black text-blue-600 text-xl"
+                    className="input-premium font-black text-blue-600 text-lg py-2"
                   />
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">{t.provider}</label>
+              <div className="space-y-1">
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">{t.provider}</label>
                 <input
                   value={formData.provider}
                   onChange={(e) => setFormData(prev => ({ ...prev, provider: e.target.value }))}
-                  className="input-premium font-bold"
+                  className="input-premium font-bold text-sm py-2"
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">{t.category}</label>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">{t.category}</label>
                   <select
                     value={formData.category}
                     onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
-                    className="input-premium font-bold appearance-none"
+                    className="input-premium font-bold appearance-none text-sm py-2"
                   >
                     <option value="comida">Comida</option>
                     <option value="peajes">Peajes</option>
@@ -343,12 +343,12 @@ const Home: React.FC<HomeProps> = ({ user, lang }) => {
                     <option value="ingreso">Ingreso</option>
                   </select>
                 </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">{t.payment}</label>
+                <div className="space-y-1">
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">{t.payment}</label>
                   <select
                     value={formData.paidWith}
                     onChange={(e) => setFormData(prev => ({ ...prev, paidWith: e.target.value }))}
-                    className="input-premium font-bold appearance-none"
+                    className="input-premium font-bold appearance-none text-sm py-2"
                   >
                     <option value="empresa">Empresa</option>
                     <option value="personal">Personal</option>
@@ -356,39 +356,39 @@ const Home: React.FC<HomeProps> = ({ user, lang }) => {
                 </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-6">
-                <div className="flex-1 space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">{t.notes}</label>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex-1 space-y-1">
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">{t.notes}</label>
                   <textarea
-                    rows={4}
+                    rows={3}
                     value={formData.notes}
                     onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-                    className="input-premium resize-none"
+                    className="input-premium resize-none text-sm py-2"
                   ></textarea>
                 </div>
                 {previewUrl && (
-                  <div className="w-full sm:w-32 h-48 sm:h-32 flex-shrink-0">
-                    <img src={previewUrl} className="w-full h-full object-cover rounded-2xl border border-slate-100 shadow-lg rotate-2 group-hover:rotate-0 transition-all duration-500" alt="preview" />
+                  <div className="w-full sm:w-24 h-32 sm:h-24 flex-shrink-0">
+                    <img src={previewUrl} className="w-full h-full object-cover rounded-xl border border-slate-100 shadow-md rotate-2 group-hover:rotate-0 transition-all duration-500" alt="preview" />
                   </div>
                 )}
               </div>
             </div>
 
-            <div className="p-8 border-t border-slate-100 bg-slate-50 flex flex-wrap gap-4 items-center justify-between">
+            <div className="p-5 border-t border-slate-100 bg-slate-50 flex items-center justify-between gap-3">
               <button
                 onClick={() => handleScan(false)}
-                className="flex items-center gap-2 font-bold text-slate-500 hover:text-slate-800 transition-colors"
+                className="flex items-center gap-2 font-bold text-slate-500 hover:text-slate-800 transition-colors text-xs"
               >
-                <Camera size={20} />
+                <Camera size={16} />
                 <span>{t.redo}</span>
               </button>
               <button
                 onClick={saveEntry}
                 disabled={isProcessing || isSaving}
-                className="btn-premium btn-premium-primary px-10"
+                className="btn-premium btn-premium-primary px-8 py-3 text-sm h-10"
               >
-                {isSaving ? <Loader2 className="animate-spin" size={18} /> : <span>{t.save}</span>}
-                {!isSaving && <ChevronRight size={18} />}
+                {isSaving ? <Loader2 className="animate-spin" size={16} /> : <span>{t.save}</span>}
+                {!isSaving && <ChevronRight size={16} />}
               </button>
             </div>
           </div>

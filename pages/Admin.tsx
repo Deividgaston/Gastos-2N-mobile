@@ -263,7 +263,7 @@ ${inviteUrl}`;
             {showInviteModal.show && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
                     <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md max-h-[90vh] flex flex-col overflow-hidden animate-slide-up">
-                        <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50 sticky top-0 z-10">
+                        <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50 sticky top-0 z-10">
                             <h3 className="font-black text-slate-800 uppercase text-xs tracking-widest">Texto de Invitación</h3>
                             <button
                                 onClick={() => setShowInviteModal({ show: false, email: '' })}
@@ -272,20 +272,20 @@ ${inviteUrl}`;
                                 <X size={20} />
                             </button>
                         </div>
-                        <div className="p-8 space-y-6">
-                            <div className="bg-slate-50 rounded-2xl p-6 border border-slate-100">
+                        <div className="p-5 space-y-5">
+                            <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
                                 <p className="text-sm font-bold text-slate-700 leading-relaxed whitespace-pre-wrap">
                                     {`¡Hola! 👋 Has sido invitado a la plataforma de Gastos 2N.\n\nTu correo ya está autorizado: ${showInviteModal.email}\n\nPuedes acceder usando tu cuenta de Google o creando una con Email y Contraseña aquí:\n${window.location.origin}${window.location.pathname}?auth=invite`}
                                 </p>
                             </div>
                             <button
                                 onClick={copyInviteToClipboard}
-                                className="w-full bg-blue-600 hover:bg-blue-500 text-white py-4 rounded-2xl font-black text-sm flex items-center justify-center gap-3 shadow-xl shadow-blue-100 transition-all active:scale-95"
+                                className="w-full bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl font-black text-sm flex items-center justify-center gap-3 shadow-xl shadow-blue-100 transition-all active:scale-95"
                             >
-                                <Copy size={20} />
+                                <Copy size={18} />
                                 Copiar al Portapapeles
                             </button>
-                            <p className="text-center text-[10px] text-slate-400 font-bold uppercase tracking-tighter">
+                            <p className="text-center text-[9px] text-slate-400 font-bold uppercase tracking-tighter">
                                 Copia este texto y mándalo por email, Teams o cualquier otra plataforma.
                             </p>
                         </div>
