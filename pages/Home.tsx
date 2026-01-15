@@ -292,14 +292,14 @@ const Home: React.FC<HomeProps> = ({ user, lang }) => {
                 </div>
               )}
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">{t.date}</label>
                   <input
                     type="date"
                     value={formData.date}
                     onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
-                    className="input-premium font-bold text-sm py-2"
+                    className="input-premium font-bold text-sm py-2 text-center w-full"
                   />
                 </div>
                 <div className="space-y-1">
