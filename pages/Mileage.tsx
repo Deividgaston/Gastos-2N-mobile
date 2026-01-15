@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { collection, addDoc, query, orderBy, getDocs, deleteDoc, doc, serverTimestamp, Timestamp, where } from 'firebase/firestore';
+import { collection, addDoc, query, orderBy, getDocs, deleteDoc, doc, serverTimestamp, Timestamp, where, limit } from 'firebase/firestore';
 import { db } from '../firebase-init';
 import { User, KmEntry } from '../types';
 import { Car, PlusCircle, Trash2, Gauge, Fuel, Info, ChevronRight, TrendingUp, History } from 'lucide-react';
@@ -43,6 +43,7 @@ const Mileage: React.FC<MileageProps> = ({ user, lang }) => {
 
     if (user) {
       try {
+        // 1. Fetch filtered KMs for the list/stats
         const q = query(
           collection(db, `users/${user.uid}/kms`),
           where('date', '>=', Timestamp.fromDate(startOfMonth)),
@@ -56,7 +57,20 @@ const Mileage: React.FC<MileageProps> = ({ user, lang }) => {
           list.push({ ...data, id: docSnap.id, dateJs: (data.date as Timestamp).toDate() } as KmEntry);
         });
         setKms(list);
-        updateOdometer(list);
+
+        // 2. Fetch absolutely LATEST entry for odometer (ignoring month)
+        const qLatest = query(
+          collection(db, `users/${user.uid}/kms`),
+          orderBy('date', 'desc'),
+          limit(1)
+        );
+        const latestSnap = await getDocs(qLatest);
+        if (!latestSnap.empty) {
+          const latestData = latestSnap.docs[0].data();
+          setLastOdometer(Number(latestData.totalKm) || 0);
+        } else {
+          setLastOdometer(0);
+        }
       } catch (err) {
         console.error("Error fetching kms:", err);
       }
@@ -70,7 +84,9 @@ const Mileage: React.FC<MileageProps> = ({ user, lang }) => {
         .reverse()
         .map((e: any) => ({ ...e, dateJs: new Date(e.date) }));
       setKms(filtered);
-      updateOdometer(filtered);
+
+      const absoluteLatest = [...local].sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
+      setLastOdometer(absoluteLatest ? Number(absoluteLatest.totalKm) : 0);
     }
   };
 
