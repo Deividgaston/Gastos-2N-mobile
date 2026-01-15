@@ -1,26 +1,56 @@
-
 import React, { useState, useEffect } from 'react';
 import { HashRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
 import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
-import { auth } from './firebase-init';
+import { auth, db } from './firebase-init';
+import { collection, query, where, getDocs, limit } from 'firebase/firestore';
 import Home from './pages/Home';
 import Mileage from './pages/Mileage';
 import Summary from './pages/Summary';
+import Admin from './pages/Admin';
 import { User } from './types';
-import { LogOut, LogIn, LayoutDashboard, Car, BarChart3, Globe } from 'lucide-react';
+import { LogOut, LogIn, LayoutDashboard, Car, BarChart3, ShieldCheck } from 'lucide-react';
 import { translations, Language } from './utils/translations';
 
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [lang, setLang] = useState<Language>('ES');
+  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (u) => {
-      if (u) {
-        setUser({ uid: u.uid, email: u.email || '' });
+    const unsubscribe = onAuthStateChanged(auth, async (u) => {
+      if (u && u.email) {
+        // Check whitelist
+        try {
+          const q = query(
+            collection(db, 'whitelisted_users'),
+            where('email', '==', u.email.toLowerCase()),
+            limit(1)
+          );
+          const snap = await getDocs(q);
+
+          if (!snap.empty) {
+            const data = snap.docs[0].data();
+            setUser({
+              uid: u.uid,
+              email: u.email,
+              isAdmin: data.isAdmin,
+              isWhitelisted: data.isWhitelisted
+            });
+            setIsAuthorized(true);
+          } else {
+            // First time bootstrap: if we want to allow the first user to be admin
+            // For now, if not in whitelist, they are not authorized
+            setUser({ uid: u.uid, email: u.email });
+            setIsAuthorized(false);
+          }
+        } catch (err) {
+          console.error("Auth error:", err);
+          setIsAuthorized(false);
+        }
       } else {
         setUser(null);
+        setIsAuthorized(null);
       }
       setLoading(false);
     });
@@ -48,6 +78,26 @@ const App: React.FC = () => {
 
   const t = translations[lang];
 
+  // Unauthorized view
+  if (user && isAuthorized === false) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 p-8 text-center space-y-6">
+        <div className="bg-red-50 p-6 rounded-full text-red-500 animate-pulse">
+          <ShieldCheck size={48} strokeWidth={1.5} />
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-2xl font-black text-slate-900">Access Restricted</h2>
+          <p className="text-slate-500 max-w-xs mx-auto text-sm font-medium">
+            Your account ({user.email}) is not authorized. Please ask an administrator to whitelist your email via WhatsApp.
+          </p>
+        </div>
+        <button onClick={handleLogout} className="text-blue-600 font-black text-xs uppercase tracking-widest bg-white px-6 py-3 rounded-xl border border-slate-200 shadow-sm">
+          Sign Out
+        </button>
+      </div>
+    );
+  }
+
   return (
     <Router>
       <div className="min-h-screen flex flex-col bg-slate-50">
@@ -63,7 +113,7 @@ const App: React.FC = () => {
               </Link>
 
               <nav className="flex items-center gap-1">
-                <NavLinks t={t} />
+                <NavLinks t={t} user={user} />
               </nav>
             </div>
 
@@ -105,7 +155,6 @@ const App: React.FC = () => {
               )}
             </div>
           </div>
-
         </header>
 
         {/* CONTENT */}
@@ -114,6 +163,7 @@ const App: React.FC = () => {
             <Route path="/" element={<Home user={user} lang={lang} />} />
             <Route path="/kms" element={<Mileage user={user} lang={lang} />} />
             <Route path="/summary" element={<Summary user={user} lang={lang} />} />
+            <Route path="/admin" element={user?.isAdmin ? <Admin /> : <Home user={user} lang={lang} />} />
           </Routes>
         </main>
       </div>
@@ -121,7 +171,7 @@ const App: React.FC = () => {
   );
 };
 
-const NavLinks: React.FC<{ t: any }> = ({ t }) => {
+const NavLinks: React.FC<{ t: any; user: User | null }> = ({ t, user }) => {
   const location = useLocation();
   const linkClass = (path: string) => `
     flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl text-sm font-bold transition-all duration-200
@@ -144,6 +194,12 @@ const NavLinks: React.FC<{ t: any }> = ({ t }) => {
         <BarChart3 size={18} />
         <span className="hidden sm:inline">{t.nav.summary}</span>
       </Link>
+      {user?.isAdmin && (
+        <Link to="/admin" className={`${linkClass('/admin')} hidden lg:flex`}>
+          <ShieldCheck size={18} />
+          <span className="hidden sm:inline">Admin</span>
+        </Link>
+      )}
     </>
   );
 };
