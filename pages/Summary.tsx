@@ -674,7 +674,7 @@ const Summary: React.FC<SummaryProps> = ({ user, lang }) => {
             </div>
 
             <div className="p-5 overflow-y-auto max-h-[80vh] space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Fecha</label>
                   <input
