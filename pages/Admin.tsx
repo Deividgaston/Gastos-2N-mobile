@@ -17,7 +17,7 @@ const Admin: React.FC = () => {
     const [isMobile, setIsMobile] = useState(false);
 
     useEffect(() => {
-        const checkMobile = () => setIsMobile(window.innerWidth < 1024);
+        const checkMobile = () => setIsMobile(window.innerWidth < 768);
         checkMobile();
         window.addEventListener('resize', checkMobile);
 
@@ -28,6 +28,11 @@ const Admin: React.FC = () => {
                 users.push({ id: doc.id, ...doc.data() } as WhitelistedUser);
             });
             setEmails(users);
+        }, (err) => {
+            console.error("Firestore error in Admin:", err);
+            if (err.code === 'permission-denied') {
+                alert("Firestore Permission Denied. Please ensure you have configured the rules for 'whitelisted_users' collection.");
+            }
         });
 
         return () => {
