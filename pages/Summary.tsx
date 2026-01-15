@@ -357,16 +357,16 @@ const Summary: React.FC<SummaryProps> = ({ user, lang }) => {
 
       {/* EDIT MODAL */}
       {editingEntry && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
-          <div className="bg-white w-full max-w-lg rounded-[2.5rem] p-10 shadow-2xl animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-slate-900/60 backdrop-blur-sm p-0 sm:p-4">
+          <div className="bg-white w-full sm:max-w-lg h-[80dvh] sm:h-auto rounded-t-[2.5rem] sm:rounded-[2.5rem] p-8 sm:p-10 shadow-2xl animate-in slide-in-from-bottom sm:zoom-in-95 duration-300">
             <div className="flex justify-between items-center mb-8">
               <h3 className="text-xl font-black text-slate-800">Editar Registro</h3>
-              <button onClick={() => setEditingEntry(null)}><X className="text-slate-400" /></button>
+              <button onClick={() => setEditingEntry(null)} className="p-2"><X className="text-slate-400" /></button>
             </div>
             <div className="space-y-6">
               <div>
                 <label className="text-[10px] font-black text-slate-400 uppercase block mb-2">Importe</label>
-                <input type="number" step="0.01" className="input-premium font-black text-xl" value={editingEntry.amount} onChange={e => setEditingEntry({ ...editingEntry, amount: parseFloat(e.target.value) })} />
+                <input type="number" step="0.01" inputMode="decimal" className="input-premium font-black text-xl text-blue-600" value={editingEntry.amount} onChange={e => setEditingEntry({ ...editingEntry, amount: parseFloat(e.target.value) })} />
               </div>
               <div>
                 <label className="text-[10px] font-black text-slate-400 uppercase block mb-2">Proveedor</label>

@@ -107,13 +107,13 @@ const App: React.FC = () => {
           </div>
 
           {/* MOBILE NAV BOTTOM */}
-          <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[90%] glass-nav rounded-2xl border border-slate-200 shadow-2xl p-2 flex items-center justify-around">
+          <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[90%] glass-nav rounded-2xl border border-slate-200 shadow-2xl p-2 flex items-center justify-around translate-y-[calc(-1*var(--sab))]">
             <NavLinks t={t} />
           </div>
         </header>
 
         {/* CONTENT */}
-        <main className="flex-1 max-w-7xl mx-auto w-full p-4 md:p-8 pb-28 md:pb-8">
+        <main className="flex-1 max-w-7xl mx-auto w-full p-4 md:p-8 pb-[calc(100px+var(--sab))] md:pb-8">
           <Routes>
             <Route path="/" element={<Home user={user} lang={lang} />} />
             <Route path="/kms" element={<Mileage user={user} lang={lang} />} />

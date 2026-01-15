@@ -1,0 +1,20 @@
+{
+    "short_name": "Gastos2N",
+    "name": "Gastos 2N Mobile",
+    "icons": [
+        {
+            "src": "https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ],
+    "start_url": ".",
+    "display": "standalone",
+    "theme_color": "#0f172a",
+    "background_color": "#f8fafc"
+}

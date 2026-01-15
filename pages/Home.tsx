@@ -256,16 +256,16 @@ const Home: React.FC<HomeProps> = ({ user, lang }) => {
 
       {/* REVIEW MODAL */}
       {showReviewModal && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/60 backdrop-blur-md p-0 sm:p-4 animate-in fade-in duration-300">
-          <div className="bg-white w-full max-w-2xl rounded-t-[2.5rem] sm:rounded-[2rem] shadow-2xl overflow-hidden flex flex-col max-h-[95vh] animate-in slide-in-from-bottom duration-500">
-            <div className="p-6 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white/80 backdrop-blur-md z-10">
+        <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-slate-900/60 backdrop-blur-md p-0 sm:p-4 animate-in fade-in duration-300">
+          <div className="bg-white w-full sm:max-w-2xl h-[100dvh] sm:h-auto sm:rounded-[2rem] shadow-2xl overflow-hidden flex flex-col animate-in slide-in-from-bottom duration-500">
+            <div className="p-6 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white/80 backdrop-blur-md z-10 pt-[calc(1.5rem+var(--sat))]">
               <h2 className="text-xl font-black text-slate-800">{t.modalTitle}</h2>
               <button onClick={() => setShowReviewModal(false)} className="w-10 h-10 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 transition-colors">
                 <Plus className="rotate-45" size={24} />
               </button>
             </div>
 
-            <div className="p-8 overflow-y-auto space-y-6">
+            <div className="p-6 sm:p-8 overflow-y-auto flex-1 space-y-6">
               {isProcessing && (
                 <div className="bg-blue-600 rounded-2xl p-6 flex flex-col items-center gap-4 shadow-xl shadow-blue-500/20 text-white animate-pulse">
                   <Loader2 className="animate-spin" size={32} />
@@ -291,6 +291,7 @@ const Home: React.FC<HomeProps> = ({ user, lang }) => {
                   <input
                     type="number"
                     step="0.01"
+                    inputMode="decimal"
                     value={formData.amount}
                     onChange={(e) => setFormData(prev => ({ ...prev, amount: parseFloat(e.target.value) }))}
                     className="input-premium font-black text-blue-600 text-xl"
