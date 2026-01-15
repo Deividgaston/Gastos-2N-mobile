@@ -1,12 +1,18 @@
 
 import React, { useState, useEffect } from 'react';
+import { collection, addDoc, query, orderBy, limit, getDocs, deleteDoc, doc, serverTimestamp, Timestamp } from 'firebase/firestore';
+import { db } from '../firebase-init';
 import { User, KmEntry } from '../types';
+import { Car, PlusCircle, Trash2, Gauge, Fuel, Info, ChevronRight, TrendingUp, History } from 'lucide-react';
+import { translations, Language } from '../utils/translations';
 
 interface MileageProps {
   user: User | null;
+  lang: Language;
 }
 
-const Mileage: React.FC<MileageProps> = ({ user }) => {
+const Mileage: React.FC<MileageProps> = ({ user, lang }) => {
+  const t = translations[lang].mileage;
   const [kms, setKms] = useState<KmEntry[]>([]);
   const [lastOdometer, setLastOdometer] = useState<number | null>(null);
   const [formData, setFormData] = useState({
@@ -14,27 +20,27 @@ const Mileage: React.FC<MileageProps> = ({ user }) => {
     km: '',
     type: 'empresa',
     fuelPrice: '',
+    consumption: '6.0',
     notes: '',
   });
   const [status, setStatus] = useState('');
 
   useEffect(() => {
     fetchKms();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const fetchKms = async () => {
     if (user) {
-      // Fixed window.firebase by casting to any
-      const db = (window as any).firebase.firestore();
-      const snap = await db.collection(`users/${user.uid}/kms`)
-        .orderBy('date', 'desc')
-        .limit(20)
-        .get();
+      const q = query(
+        collection(db, `users/${user.uid}/kms`),
+        orderBy('date', 'desc'),
+        limit(20)
+      );
+      const snap = await getDocs(q);
       const list: KmEntry[] = [];
-      snap.forEach((doc: any) => {
-        const data = doc.data();
-        list.push({ ...data, id: doc.id, dateJs: data.date.toDate() });
+      snap.forEach((docSnap) => {
+        const data = docSnap.data();
+        list.push({ ...data, id: docSnap.id, dateJs: (data.date as Timestamp).toDate() } as KmEntry);
       });
       setKms(list);
       updateOdometer(list);
@@ -56,25 +62,24 @@ const Mileage: React.FC<MileageProps> = ({ user }) => {
 
   const saveKm = async () => {
     const distance = Number(formData.km);
-    if (!distance || distance <= 0) return alert('Introduce KM válidos');
-    
+    if (!distance || distance <= 0) return alert('KM?');
+
     const totalKm = lastOdometer !== null ? lastOdometer + distance : distance;
     const entry = {
       ...formData,
       km: distance,
       totalKm,
       fuelPrice: formData.fuelPrice ? Number(formData.fuelPrice) : null,
+      consumption: Number(formData.consumption) || 6.0,
     };
 
-    setStatus('Guardando...');
+    setStatus('...');
     try {
       if (user) {
-        // Fixed window.firebase by casting to any
-        const db = (window as any).firebase.firestore();
-        await db.collection(`users/${user.uid}/kms`).add({
+        await addDoc(collection(db, `users/${user.uid}/kms`), {
           ...entry,
           date: new Date(formData.date),
-          createdAt: (window as any).firebase.firestore.FieldValue.serverTimestamp()
+          createdAt: serverTimestamp()
         });
       } else {
         const local = JSON.parse(localStorage.getItem('kms_local') || '[]');
@@ -82,20 +87,18 @@ const Mileage: React.FC<MileageProps> = ({ user }) => {
         localStorage.setItem('kms_local', JSON.stringify(local));
       }
       setFormData({ ...formData, km: '', notes: '' });
-      setStatus('Guardado ✅');
+      setStatus('OK ✅');
       fetchKms();
     } catch (e) {
-      setStatus('Error');
+      setStatus('ERR');
     }
   };
 
   const deleteKm = async (item: KmEntry) => {
-    if (!confirm('¿Borrar este registro?')) return;
+    if (!confirm('?')) return;
     try {
       if (user && item.id) {
-        // Fixed window.firebase by casting to any
-        const db = (window as any).firebase.firestore();
-        await db.collection(`users/${user.uid}/kms`).doc(item.id).delete();
+        await deleteDoc(doc(db, `users/${user.uid}/kms`, item.id));
       } else {
         const local = JSON.parse(localStorage.getItem('kms_local') || '[]');
         const filtered = local.filter((l: any) => l.date !== item.date || l.km !== item.km);
@@ -107,148 +110,206 @@ const Mileage: React.FC<MileageProps> = ({ user }) => {
     }
   };
 
-  const calculatedOdometer = formData.km ? (lastOdometer || 0) + Number(formData.km) : (lastOdometer || '');
+  const calculatedOdometer = formData.km ? (lastOdometer || 0) + Number(formData.km) : (lastOdometer || 0);
 
   return (
-    <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
+    <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 animate-fade-in">
       {/* FORM SECTION */}
-      <div className="lg:col-span-5 space-y-6">
-        <section className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-          <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
-              <i className="fa-solid fa-plus-circle"></i>
+      <div className="lg:col-span-5 space-y-8">
+        <section className="premium-card p-6 md:p-8">
+          <div className="flex items-center gap-4 mb-8">
+            <div className="w-12 h-12 rounded-2xl bg-blue-600 text-white flex items-center justify-center shadow-lg shadow-blue-500/20">
+              <PlusCircle size={24} />
             </div>
-            Nuevo registro
-          </h2>
-          
-          <div className="space-y-4">
+            <div>
+              <h2 className="text-xl font-black text-slate-800 tracking-tight">{t.formTitle}</h2>
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{t.title}</p>
+            </div>
+          </div>
+
+          <div className="space-y-6">
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Fecha</label>
-                <input 
-                  type="date" 
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Fecha</label>
+                <input
+                  type="date"
                   value={formData.date}
-                  onChange={e => setFormData({...formData, date: e.target.value})}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-500"
+                  onChange={e => setFormData({ ...formData, date: e.target.value })}
+                  className="input-premium font-bold"
                 />
               </div>
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Distancia (km)</label>
-                <input 
-                  type="number" 
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t.distance}</label>
+                <input
+                  type="number"
                   placeholder="0.0"
                   value={formData.km}
-                  onChange={e => setFormData({...formData, km: e.target.value})}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 font-bold outline-none focus:ring-2 focus:ring-blue-500"
+                  onChange={e => setFormData({ ...formData, km: e.target.value })}
+                  className="input-premium font-black text-lg text-blue-600"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Tipo</label>
-                <select 
-                  value={formData.type}
-                  onChange={e => setFormData({...formData, type: e.target.value})}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="empresa">Empresa</option>
-                  <option value="personal">Personal</option>
-                </select>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t.type}</label>
+                <div className="relative">
+                  <select
+                    value={formData.type}
+                    onChange={e => setFormData({ ...formData, type: e.target.value })}
+                    className="input-premium font-bold appearance-none"
+                  >
+                    <option value="empresa">{t.company}</option>
+                    <option value="personal">{t.personal}</option>
+                  </select>
+                  <ChevronRight size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 rotate-90" />
+                </div>
               </div>
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Combustible (€/L)</label>
-                <input 
-                  type="number" 
-                  step="0.01"
-                  placeholder="1.65"
-                  value={formData.fuelPrice}
-                  onChange={e => setFormData({...formData, fuelPrice: e.target.value})}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-500"
-                />
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t.fuel}</label>
+                <div className="relative">
+                  <Fuel size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="number"
+                    step="0.01"
+                    placeholder="1.65"
+                    value={formData.fuelPrice}
+                    onChange={e => setFormData({ ...formData, fuelPrice: e.target.value })}
+                    className="input-premium pl-10 font-bold"
+                  />
+                </div>
               </div>
             </div>
 
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Notas</label>
-              <textarea 
-                rows={2}
+            <div className="grid grid-cols-1 gap-4">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t.consumption}</label>
+                <div className="relative">
+                  <TrendingUp size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={formData.consumption}
+                    onChange={e => setFormData({ ...formData, consumption: e.target.value })}
+                    className="input-premium pl-10 font-bold"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t.history}</label>
+              <textarea
+                rows={3}
                 value={formData.notes}
-                onChange={e => setFormData({...formData, notes: e.target.value})}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                placeholder="Motivo del viaje..."
+                onChange={e => setFormData({ ...formData, notes: e.target.value })}
+                className="input-premium resize-none"
               ></textarea>
             </div>
 
-            <div className="bg-slate-900 rounded-xl p-4 text-white flex items-center justify-between">
-              <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">Odómetro Total</div>
-              <div className="text-2xl font-black">{calculatedOdometer} <span className="text-xs font-normal">km</span></div>
+            <div className="bg-slate-900 rounded-[2rem] p-6 text-white relative overflow-hidden shadow-2xl border-b-4 border-blue-600">
+              <div className="absolute top-0 right-0 p-4 opacity-10">
+                <Gauge size={80} />
+              </div>
+              <div className="relative z-10 flex items-center justify-between">
+                <div>
+                  <div className="text-[10px] font-black text-blue-400 uppercase tracking-[0.2em] mb-1">{t.odometer}</div>
+                  <div className="text-3xl font-black tabular-nums">{calculatedOdometer.toLocaleString()} <span className="text-xs font-medium opacity-40">km</span></div>
+                </div>
+                <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
+                  <TrendingUp size={20} className="text-blue-400" />
+                </div>
+              </div>
             </div>
 
-            <button 
-              onClick={saveKm}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-lg transition-all active:scale-[0.98] mt-2"
-            >
-              Guardar KM
-            </button>
-            <div className="text-center h-4 text-xs font-semibold text-blue-600 uppercase tracking-tighter">{status}</div>
+            <div className="space-y-3 pt-2">
+              <button
+                onClick={saveKm}
+                className="btn-premium btn-premium-primary w-full py-4 text-lg"
+              >
+                <span>{t.save}</span>
+                <ChevronRight size={20} />
+              </button>
+              <div className="text-center h-4 text-[10px] font-black text-blue-500 uppercase tracking-[0.2em]">{status}</div>
+            </div>
           </div>
         </section>
 
         {/* SUMMARY CARD */}
-        <section className="bg-slate-800 rounded-2xl shadow-sm p-6 text-white overflow-hidden relative">
-          <i className="fa-solid fa-road absolute -right-4 -bottom-4 text-white/5 text-8xl"></i>
-          <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Resumen acumulado</h3>
-          <div className="space-y-3 relative z-10">
-            <div className="flex justify-between items-center border-b border-white/10 pb-2">
-              <span className="text-slate-400 text-sm">Empresa</span>
-              <span className="font-bold">{kms.filter(k=>k.type==='empresa').reduce((a,b)=>a+(b.km||b.distance||0),0).toFixed(1)} km</span>
+        <section className="bg-slate-800 rounded-[2rem] shadow-2xl p-8 text-white relative overflow-hidden group">
+          <Car size={120} className="absolute -right-8 -bottom-8 text-white/5 transform group-hover:-rotate-12 transition-transform duration-700" />
+          <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
+            <Info size={12} className="text-blue-400" />
+            {t.statsTitle}
+          </h3>
+          <div className="space-y-6 relative z-10">
+            <div className="flex justify-between items-end border-b border-white/5 pb-4">
+              <div>
+                <span className="text-slate-400 text-xs font-bold block mb-1">{t.company}</span>
+              </div>
+              <span className="text-xl font-black">{kms.filter(k => k.type === 'empresa').reduce((a, b) => a + (Number(b.km || b.distance) || 0), 0).toFixed(1)} <span className="text-[10px] opacity-40">km</span></span>
             </div>
-            <div className="flex justify-between items-center border-b border-white/10 pb-2">
-              <span className="text-slate-400 text-sm">Personal</span>
-              <span className="font-bold">{kms.filter(k=>k.type==='personal').reduce((a,b)=>a+(b.km||b.distance||0),0).toFixed(1)} km</span>
-            </div>
-            <div className="flex justify-between items-center pt-1">
-              <span className="text-white font-bold">Total</span>
-              <span className="text-xl font-black text-blue-400">{kms.reduce((a,b)=>a+(b.km||b.distance||0),0).toFixed(1)} km</span>
+            <div className="flex justify-between items-end border-b border-white/5 pb-4">
+              <div>
+                <span className="text-slate-400 text-xs font-bold block mb-1">{t.personal}</span>
+              </div>
+              <span className="text-xl font-black text-orange-400">{kms.filter(k => k.type === 'personal').reduce((a, b) => a + (Number(b.km || b.distance) || 0), 0).toFixed(1)} <span className="text-[10px] opacity-40">km</span></span>
             </div>
           </div>
         </section>
       </div>
 
       {/* LIST SECTION */}
-      <div className="lg:col-span-7 space-y-6">
-        <section className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-          <div className="p-6 border-b border-slate-100 flex items-center justify-between">
-            <h2 className="text-lg font-bold text-slate-800">Registros de KM</h2>
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Últimos 20</span>
+      <div className="lg:col-span-7 space-y-8">
+        <section className="premium-card overflow-hidden">
+          <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center text-slate-400 shadow-sm border border-slate-100">
+                <History size={16} />
+              </div>
+              <h2 className="text-lg font-bold text-slate-800">{t.history}</h2>
+            </div>
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Últimos 20</span>
           </div>
-          <div className="divide-y divide-slate-100 max-h-[700px] overflow-y-auto">
+          <div className="divide-y divide-slate-100 max-h-[850px] overflow-y-auto">
             {kms.length > 0 ? kms.map((item, idx) => (
-              <div key={idx} className="p-4 hover:bg-slate-50 transition-colors flex items-center justify-between group">
-                <div className="flex items-start gap-4">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold ${item.type === 'personal' ? 'bg-orange-50 text-orange-600' : 'bg-blue-50 text-blue-600'}`}>
-                    {item.type === 'personal' ? 'P' : 'E'}
+              <div key={idx} className="p-6 hover:bg-slate-50 transition-all flex items-center justify-between group">
+                <div className="flex items-start gap-5">
+                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xs font-black shadow-sm ${String(item.type).toLowerCase().includes('per') ? 'bg-orange-50 text-orange-600' : 'bg-blue-50 text-blue-600'}`}>
+                    {String(item.type).toLowerCase().includes('per') ? 'PER' : 'EMP'}
                   </div>
                   <div>
-                    <div className="font-bold text-slate-800">{item.dateJs?.toISOString().slice(0,10)} • {(item.km || item.distance || 0).toFixed(1)} km</div>
-                    <div className="text-xs text-slate-400 max-w-[300px] truncate">{item.notes || 'Sin notas'}</div>
-                    <div className="text-[10px] text-slate-300 font-bold mt-1 uppercase tracking-tighter">
-                      Comb: {item.fuelPrice?.toFixed(2) || '-'}€/L • Odo: {item.totalKm || '-'}
+                    <div className="font-bold text-slate-800 flex items-center gap-2">
+                      {item.dateJs?.toISOString().slice(0, 10)}
+                      <span className="w-1.5 h-1.5 rounded-full bg-slate-200"></span>
+                      <span className="text-blue-600">{(item.km || item.distance || 0).toFixed(1)} km</span>
+                    </div>
+                    <div className="text-xs font-medium text-slate-400 mt-0.5 line-clamp-2 italic">"{item.notes || '...'}"</div>
+                    <div className="flex gap-4 mt-2">
+                      <div className="flex items-center gap-1.5">
+                        <Fuel size={10} className="text-slate-300" />
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">{item.fuelPrice?.toFixed(2) || '-'}€/L</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <Gauge size={10} className="text-slate-300" />
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">Odo: {item.totalKm?.toLocaleString() || '-'}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
-                <button 
+                <button
                   onClick={() => deleteKm(item)}
-                  className="opacity-0 group-hover:opacity-100 w-10 h-10 rounded-full hover:bg-red-50 text-red-500 flex items-center justify-center transition-all"
+                  className="opacity-0 group-hover:opacity-100 w-10 h-10 rounded-full bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all duration-300 scale-90 group-hover:scale-100"
                 >
-                  <i className="fa-solid fa-trash-can"></i>
+                  <Trash2 size={16} />
                 </button>
               </div>
             )) : (
-              <div className="p-12 text-center text-slate-400">
-                <i className="fa-solid fa-car-rear text-4xl mb-3 block opacity-20"></i>
-                <p>Sin registros de KM todavía.</p>
+              <div className="p-20 text-center">
+                <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 border border-dashed border-slate-200 text-slate-200">
+                  <Car size={40} />
+                </div>
+                <p className="font-bold text-slate-300">{t.empty}</p>
               </div>
             )}
           </div>
@@ -259,3 +320,5 @@ const Mileage: React.FC<MileageProps> = ({ user }) => {
 };
 
 export default Mileage;
+
+

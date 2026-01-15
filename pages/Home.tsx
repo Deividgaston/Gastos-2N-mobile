@@ -1,20 +1,25 @@
 
 import React, { useState, useEffect } from 'react';
+import { collection, addDoc, query, orderBy, limit, getDocs, serverTimestamp, Timestamp } from 'firebase/firestore';
+import { db, storage } from '../firebase-init';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { ExpenseEntry, User } from '../types';
-// Import Gemini SDK
 import { GoogleGenAI, Type } from "@google/genai";
+import { Camera, Plus, History, Clock, Tag, CreditCard, ChevronRight, Loader2 } from 'lucide-react';
+import { resizeImage } from '../utils/image-utils';
+import { translations, Language } from '../utils/translations';
 
-// Initialize Gemini API
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
 
 interface HomeProps {
   user: User | null;
+  lang: Language;
 }
 
-const Home: React.FC<HomeProps> = ({ user }) => {
+const Home: React.FC<HomeProps> = ({ user, lang }) => {
+  const t = translations[lang].home;
   const [entries, setEntries] = useState<ExpenseEntry[]>([]);
   const [showReviewModal, setShowReviewModal] = useState(false);
-  // Removed showOCRModal, ocrKey, ocrStatus as per Gemini API guidelines (no API key management in UI)
   const [formData, setFormData] = useState<ExpenseEntry>({
     date: new Date().toISOString().slice(0, 10),
     amount: 0,
@@ -24,25 +29,26 @@ const Home: React.FC<HomeProps> = ({ user }) => {
     notes: '',
   });
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [previewUrl, setPreviewUrl] = useState('');
+  const [resizedBlob, setResizedBlob] = useState<Blob | null>(null);
 
   useEffect(() => {
     fetchRecentEntries();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const fetchRecentEntries = async () => {
     if (user) {
-      // Fixed window.firebase by casting to any
-      const db = (window as any).firebase.firestore();
-      const snap = await db.collection(`users/${user.uid}/entries`)
-        .orderBy('date', 'desc')
-        .limit(5)
-        .get();
+      const q = query(
+        collection(db, `users/${user.uid}/entries`),
+        orderBy('date', 'desc'),
+        limit(5)
+      );
+      const snap = await getDocs(q);
       const list: ExpenseEntry[] = [];
-      snap.forEach((doc: any) => {
+      snap.forEach((doc) => {
         const data = doc.data();
-        list.push({ ...data, id: doc.id, dateJs: data.date.toDate() });
+        list.push({ ...data, id: doc.id, dateJs: (data.date as Timestamp).toDate() } as ExpenseEntry);
       });
       setEntries(list);
     } else {
@@ -59,20 +65,22 @@ const Home: React.FC<HomeProps> = ({ user }) => {
     input.onchange = async () => {
       const file = input.files?.[0];
       if (!file) return;
-      
+
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
       setFormData(prev => ({ ...prev, date: new Date().toISOString().slice(0, 10) }));
       setShowReviewModal(true);
-      
-      // Use Gemini SDK for OCR as per guidelines
+
       setIsProcessing(true);
       try {
-        const ab = await file.arrayBuffer();
+        const resized = await resizeImage(file);
+        setResizedBlob(resized);
+
+        const ab = await resized.arrayBuffer();
         const b64 = btoa(new Uint8Array(ab).reduce((data, byte) => data + String.fromCharCode(byte), ''));
-        
+
         const response = await ai.models.generateContent({
-          model: 'gemini-3-flash-preview',
+          model: 'gemini-1.5-flash',
           contents: {
             parts: [
               { text: 'Extrae proveedor, fecha (YYYY-MM-DD), categoría (comida, peajes, gasolina, transporte, alojamiento, ocio, servicios, varios o ingreso) e importe total EUR de este ticket.' },
@@ -94,9 +102,9 @@ const Home: React.FC<HomeProps> = ({ user }) => {
           }
         });
 
-        const text = response.text;
-        if (text) {
-          const parsed = JSON.parse(text);
+        const result = response.text;
+        if (result) {
+          const parsed = JSON.parse(result);
           setFormData(prev => ({
             ...prev,
             provider: parsed.provider || prev.provider,
@@ -115,96 +123,132 @@ const Home: React.FC<HomeProps> = ({ user }) => {
   };
 
   const saveEntry = async () => {
+    setIsSaving(true);
     try {
+      let photoPath = '';
+      let photoURL = '';
+
+      if (user && resizedBlob) {
+        const fileName = `tickets/${user.uid}/${Date.now()}.jpg`;
+        const storageRef = ref(storage, fileName);
+        await uploadBytes(storageRef, resizedBlob);
+        photoURL = await getDownloadURL(storageRef);
+        photoPath = fileName;
+      }
+
       if (user) {
-        // Fixed window.firebase by casting to any
-        const db = (window as any).firebase.firestore();
-        await db.collection(`users/${user.uid}/entries`).add({
+        await addDoc(collection(db, `users/${user.uid}/entries`), {
           ...formData,
           date: new Date(formData.date),
-          createdAt: (window as any).firebase.firestore.FieldValue.serverTimestamp()
+          createdAt: serverTimestamp(),
+          photoPath,
+          photoURL,
         });
       } else {
         const local = JSON.parse(localStorage.getItem('entries_local') || '[]');
-        local.push(formData);
+        local.push({ ...formData, photoURL: previewUrl });
         localStorage.setItem('entries_local', JSON.stringify(local));
       }
       setShowReviewModal(false);
+      setResizedBlob(null);
       fetchRecentEntries();
-      alert('Guardado ✅');
+      alert('OK ✅');
     } catch (e) {
-      alert('Error guardando');
+      console.error(e);
+      alert('Error');
+    } finally {
+      setIsSaving(false);
     }
   };
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
+    <div className="space-y-8 animate-fade-in max-w-4xl mx-auto">
       {/* QUICK ACTIONS */}
-      <section className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-          <div>
-            <h2 className="text-xl font-bold text-slate-800">Acciones rápidas</h2>
-            <p className="text-sm text-slate-500">Registra un nuevo gasto de forma instantánea.</p>
-          </div>
-          {/* Removed Configurar OCR button as per Gemini API guidelines */}
+      <section className="premium-card p-6 md:p-8">
+        <div className="mb-8">
+          <h2 className="text-2xl font-black text-slate-800 tracking-tight">{translations[lang].home.scan}</h2>
+          <p className="text-sm font-medium text-slate-400">{translations[lang].home.scanDesc}</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <button 
-            id="scanBtn"
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <button
             onClick={() => handleScan(true)}
-            className="group flex flex-col items-center justify-center gap-3 p-8 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl shadow-md transition-all active:scale-95"
+            className="group relative overflow-hidden flex flex-col items-center justify-center gap-4 p-10 bg-slate-900 text-white rounded-[2rem] shadow-2xl transition-all active:scale-95 border-b-4 border-blue-600"
           >
-            <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
-              <i className="fa-solid fa-camera text-2xl"></i>
+            <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-500 shadow-xl shadow-blue-500/20">
+              <Camera size={32} />
             </div>
-            <span className="font-bold text-lg">Escanear Ticket</span>
+            <div className="text-center">
+              <span className="font-bold text-xl block">{t.scan}</span>
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">{t.scanDesc}</span>
+            </div>
           </button>
 
-          <button 
-            id="manualBtn"
+          <button
             onClick={() => {
               setPreviewUrl('');
               setFormData({ date: new Date().toISOString().slice(0, 10), amount: 0, provider: '', category: 'varios', paidWith: 'empresa', notes: '' });
               setShowReviewModal(true);
             }}
-            className="group flex flex-col items-center justify-center gap-3 p-8 bg-white border-2 border-slate-100 hover:border-blue-100 hover:bg-blue-50 text-slate-700 rounded-2xl transition-all active:scale-95"
+            className="group flex flex-col items-center justify-center gap-4 p-10 bg-white border border-slate-200 hover:border-blue-200 hover:bg-blue-50/30 text-slate-800 rounded-[2rem] transition-all active:scale-95"
           >
-            <div className="w-14 h-14 bg-slate-100 group-hover:bg-blue-100 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform text-blue-600">
-              <i className="fa-solid fa-plus text-2xl"></i>
+            <div className="w-16 h-16 bg-slate-50 group-hover:bg-blue-100 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-500 text-blue-600 shadow-sm">
+              <Plus size={32} />
             </div>
-            <span className="font-bold text-lg">Ingreso Manual</span>
+            <div className="text-center">
+              <span className="font-bold text-xl block">{t.manual}</span>
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-300">{t.manualDesc}</span>
+            </div>
           </button>
         </div>
       </section>
 
       {/* RECENT LIST */}
-      <section className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-        <div className="p-6 border-b border-slate-100 flex items-center justify-between">
-          <h2 className="text-lg font-bold text-slate-800">Notas recientes</h2>
-          <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Últimos 5</span>
+      <section className="premium-card overflow-hidden">
+        <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center text-slate-400 shadow-sm border border-slate-100">
+              <History size={16} />
+            </div>
+            <h2 className="text-lg font-bold text-slate-800">{t.recent}</h2>
+          </div>
+          <span className="text-[10px] font-black text-blue-500 bg-blue-50 px-3 py-1 rounded-full uppercase tracking-wider">{t.last5}</span>
         </div>
-        <div id="lista" className="divide-y divide-slate-100">
+        <div className="divide-y divide-slate-100">
           {entries.length > 0 ? entries.map((e, idx) => (
-            <div key={idx} className="p-4 hover:bg-slate-50 transition-colors flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">
-                  <i className={`fa-solid ${getCategoryIcon(e.category)}`}></i>
+            <div key={idx} className="p-5 hover:bg-slate-50/80 transition-all flex items-center justify-between group cursor-pointer">
+              <div className="flex items-center gap-5">
+                <div className="w-12 h-12 rounded-[1rem] bg-white border border-slate-100 flex items-center justify-center text-slate-400 shadow-sm group-hover:bg-blue-600 group-hover:text-white group-hover:border-transparent transition-all duration-300">
+                  <i className={`fa-solid ${getCategoryIcon(e.category)} text-xl`}></i>
                 </div>
                 <div>
-                  <div className="font-bold text-slate-800">{e.provider || 'Sin proveedor'}</div>
-                  <div className="text-xs text-slate-500">{e.dateJs?.toISOString().slice(0,10)} • {e.category}</div>
+                  <div className="font-bold text-slate-800 group-hover:text-blue-600 transition-colors uppercase tracking-tight">{e.provider || '...'}</div>
+                  <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
+                    <Clock size={10} />
+                    {e.dateJs?.toISOString().slice(0, 10)}
+                    <span className="w-1 h-1 rounded-full bg-slate-200"></span>
+                    <Tag size={10} className="ml-1" />
+                    {e.category}
+                  </div>
                 </div>
               </div>
-              <div className="text-right">
-                <div className="font-black text-slate-900">{e.amount.toFixed(2)}€</div>
-                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{e.paidWith}</div>
+              <div className="flex items-center gap-4">
+                <div className="text-right">
+                  <div className="font-black text-slate-900 text-lg">{e.amount.toFixed(2)}€</div>
+                  <div className="flex items-center justify-end gap-1 text-[9px] font-black text-slate-400 uppercase tracking-tighter">
+                    <CreditCard size={9} />
+                    {e.paidWith}
+                  </div>
+                </div>
+                <ChevronRight size={18} className="text-slate-300 transform group-hover:translate-x-1 transition-transform" />
               </div>
             </div>
           )) : (
-            <div className="p-12 text-center text-slate-400">
-              <i className="fa-regular fa-folder-open text-4xl mb-3 block"></i>
-              <p>Sin apuntes aún.</p>
+            <div className="p-16 text-center">
+              <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-dashed border-slate-200 text-slate-300">
+                <Plus size={32} />
+              </div>
+              <p className="font-bold text-slate-400">{t.empty}</p>
             </div>
           )}
         </div>
@@ -212,66 +256,64 @@ const Home: React.FC<HomeProps> = ({ user }) => {
 
       {/* REVIEW MODAL */}
       {showReviewModal && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/40 backdrop-blur-sm p-0 sm:p-4 animate-in fade-in">
-          <div className="bg-white w-full max-w-2xl rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in slide-in-from-bottom sm:slide-in-from-bottom-4 duration-300">
-            <div className="p-5 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white z-10">
-              <h2 className="text-lg font-bold text-slate-800">Revisar y guardar</h2>
-              <button onClick={() => setShowReviewModal(false)} className="w-8 h-8 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400">
-                <i className="fa-solid fa-xmark"></i>
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/60 backdrop-blur-md p-0 sm:p-4 animate-in fade-in duration-300">
+          <div className="bg-white w-full max-w-2xl rounded-t-[2.5rem] sm:rounded-[2rem] shadow-2xl overflow-hidden flex flex-col max-h-[95vh] animate-in slide-in-from-bottom duration-500">
+            <div className="p-6 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white/80 backdrop-blur-md z-10">
+              <h2 className="text-xl font-black text-slate-800">{t.modalTitle}</h2>
+              <button onClick={() => setShowReviewModal(false)} className="w-10 h-10 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 transition-colors">
+                <Plus className="rotate-45" size={24} />
               </button>
             </div>
-            
-            <div className="p-6 overflow-y-auto space-y-4">
+
+            <div className="p-8 overflow-y-auto space-y-6">
               {isProcessing && (
-                <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 flex items-center gap-4 animate-pulse">
-                  <div className="animate-spin text-blue-600"><i className="fa-solid fa-circle-notch"></i></div>
-                  <span className="text-sm font-semibold text-blue-700">Analizando ticket con Gemini OCR...</span>
+                <div className="bg-blue-600 rounded-2xl p-6 flex flex-col items-center gap-4 shadow-xl shadow-blue-500/20 text-white animate-pulse">
+                  <Loader2 className="animate-spin" size={32} />
+                  <div className="text-center">
+                    <span className="block font-bold text-lg">{t.processing}</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest opacity-60">{t.iaWarning}</span>
+                  </div>
                 </div>
               )}
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Fecha</label>
-                  <input 
-                    id="revDate" 
-                    type="date" 
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">{t.date}</label>
+                  <input
+                    type="date"
                     value={formData.date}
                     onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                    className="input-premium font-bold"
                   />
                 </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Importe (€)</label>
-                  <input 
-                    id="revAmount" 
-                    type="number" 
-                    step="0.01" 
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">{t.amount}</label>
+                  <input
+                    type="number"
+                    step="0.01"
                     value={formData.amount}
                     onChange={(e) => setFormData(prev => ({ ...prev, amount: parseFloat(e.target.value) }))}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-800 font-bold focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                    className="input-premium font-black text-blue-600 text-xl"
                   />
                 </div>
               </div>
 
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Proveedor</label>
-                <input 
-                  id="revProvider" 
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">{t.provider}</label>
+                <input
                   value={formData.provider}
                   onChange={(e) => setFormData(prev => ({ ...prev, provider: e.target.value }))}
-                  placeholder="Ej: Gasolinera Cepsa"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                  className="input-premium font-bold"
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Categoría</label>
-                  <select 
-                    id="revCategory" 
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">{t.category}</label>
+                  <select
                     value={formData.category}
                     onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-800 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                    className="input-premium font-bold appearance-none"
                   >
                     <option value="comida">Comida</option>
                     <option value="peajes">Peajes</option>
@@ -284,63 +326,57 @@ const Home: React.FC<HomeProps> = ({ user }) => {
                     <option value="ingreso">Ingreso</option>
                   </select>
                 </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Pago</label>
-                  <select 
-                    id="revPaidWith" 
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">{t.payment}</label>
+                  <select
                     value={formData.paidWith}
                     onChange={(e) => setFormData(prev => ({ ...prev, paidWith: e.target.value }))}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-800 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                    className="input-premium font-bold appearance-none"
                   >
-                    <option value="empresa">Tarjeta empresa</option>
-                    <option value="personal">Mi dinero</option>
+                    <option value="empresa">Empresa</option>
+                    <option value="personal">Personal</option>
                   </select>
                 </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-4">
-                <div className="flex-1 space-y-1">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Notas</label>
-                  <textarea 
-                    id="revNotes" 
-                    rows={3} 
+              <div className="flex flex-col sm:flex-row gap-6">
+                <div className="flex-1 space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">{t.notes}</label>
+                  <textarea
+                    rows={4}
                     value={formData.notes}
                     onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-slate-800 focus:ring-2 focus:ring-blue-500 outline-none transition-all resize-none"
-                    placeholder="Detalles adicionales..."
+                    className="input-premium resize-none"
                   ></textarea>
                 </div>
                 {previewUrl && (
-                  <div className="w-full sm:w-28 h-40 sm:h-28 flex-shrink-0">
-                    <img src={previewUrl} className="w-full h-full object-cover rounded-xl border border-slate-200 shadow-sm" alt="preview" />
+                  <div className="w-full sm:w-32 h-48 sm:h-32 flex-shrink-0">
+                    <img src={previewUrl} className="w-full h-full object-cover rounded-2xl border border-slate-100 shadow-lg rotate-2 group-hover:rotate-0 transition-all duration-500" alt="preview" />
                   </div>
                 )}
               </div>
             </div>
 
-            <div className="p-5 border-t border-slate-100 bg-slate-50 flex flex-wrap gap-3 items-center justify-between">
-              <div className="flex gap-2">
-                <button 
-                  onClick={() => handleScan(false)}
-                  className="bg-white text-slate-700 border border-slate-200 px-4 py-2.5 rounded-xl font-bold text-sm hover:bg-slate-50 flex items-center gap-2 transition-colors"
-                >
-                  <i className="fa-solid fa-paperclip"></i>
-                  <span className="hidden sm:inline">Cambiar foto</span>
-                </button>
-              </div>
-              <button 
-                id="saveReview"
-                onClick={saveEntry}
-                disabled={isProcessing}
-                className="bg-blue-600 text-white px-8 py-2.5 rounded-xl font-bold text-sm shadow-md hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed transition-all"
+            <div className="p-8 border-t border-slate-100 bg-slate-50 flex flex-wrap gap-4 items-center justify-between">
+              <button
+                onClick={() => handleScan(false)}
+                className="flex items-center gap-2 font-bold text-slate-500 hover:text-slate-800 transition-colors"
               >
-                Guardar registro
+                <Camera size={20} />
+                <span>{t.redo}</span>
+              </button>
+              <button
+                onClick={saveEntry}
+                disabled={isProcessing || isSaving}
+                className="btn-premium btn-premium-primary px-10"
+              >
+                {isSaving ? <Loader2 className="animate-spin" size={18} /> : <span>{t.save}</span>}
+                {!isSaving && <ChevronRight size={18} />}
               </button>
             </div>
           </div>
         </div>
       )}
-      {/* Removed OCR CONFIG MODAL as per Gemini API guidelines */}
     </div>
   );
 };
@@ -361,3 +397,5 @@ const getCategoryIcon = (cat: string) => {
 };
 
 export default Home;
+
+

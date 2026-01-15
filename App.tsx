@@ -1,35 +1,24 @@
 
 import React, { useState, useEffect } from 'react';
 import { HashRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
+import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
+import { auth } from './firebase-init';
 import Home from './pages/Home';
 import Mileage from './pages/Mileage';
-import Export from './pages/Export';
 import Summary from './pages/Summary';
 import { User } from './types';
-
-// Firebase Config from User's Snippet
-const FBCONFIG = {
-  apiKey: "AIzaSyBTK8altmAR-fWqR9BjE74gEGavuiqk1Bs",
-  authDomain: "gastos-2n.firebaseapp.com",
-  projectId: "gastos-2n",
-  storageBucket: "gastos-2n.firebasestorage.app",
-  messagingSenderId: "55010048795",
-  appId: "1:55010048795:web:4fb48d1e0f9006ebf7b1be"
-};
+import { LogOut, LogIn, LayoutDashboard, Car, BarChart3, Globe } from 'lucide-react';
+import { translations, Language } from './utils/translations';
 
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [lang, setLang] = useState<Language>('ES');
 
   useEffect(() => {
-    // Fixed window.firebase by casting to any
-    if (!(window as any).firebase.apps.length) {
-      (window as any).firebase.initializeApp(FBCONFIG);
-    }
-    const auth = (window as any).firebase.auth();
-    const unsubscribe = auth.onAuthStateChanged((u: any) => {
+    const unsubscribe = onAuthStateChanged(auth, (u) => {
       if (u) {
-        setUser({ uid: u.uid, email: u.email });
+        setUser({ uid: u.uid, email: u.email || '' });
       } else {
         setUser(null);
       }
@@ -38,22 +27,16 @@ const App: React.FC = () => {
     return () => unsubscribe();
   }, []);
 
-  const handleLogin = () => {
-    // Fixed window.firebase.auth.GoogleAuthProvider by casting to any
-    const provider = new (window as any).firebase.auth.GoogleAuthProvider();
-    (window as any).firebase.auth().signInWithPopup(provider).catch((err: any) => {
-      if (err.code === 'auth/popup-blocked' || err.code === 'auth/popup-closed-by-user') {
-        (window as any).firebase.auth().signInWithRedirect(provider);
-      } else {
-        alert('Error login: ' + (err.message || ''));
-      }
-    });
+  const handleLogin = async () => {
+    const provider = new GoogleAuthProvider();
+    try {
+      await signInWithPopup(auth, provider);
+    } catch (err: any) {
+      alert('Error login: ' + (err.message || ''));
+    }
   };
 
-  const handleLogout = () => {
-    // Fixed window.firebase by casting to any
-    (window as any).firebase.auth().signOut();
-  };
+  const handleLogout = () => signOut(auth);
 
   if (loading) {
     return (
@@ -63,66 +46,78 @@ const App: React.FC = () => {
     );
   }
 
+  const t = translations[lang];
+
   return (
     <Router>
-      <div className="min-h-screen flex flex-col">
+      <div className="min-h-screen flex flex-col bg-slate-50">
         {/* TOP BAR */}
-        <header className="sticky top-0 z-40 bg-white border-b border-slate-200 shadow-sm">
+        <header className="sticky top-0 z-40 glass-nav shadow-sm">
           <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-            <div className="flex items-center gap-2 md:gap-4">
-              <Link to="/" className="flex items-center gap-2 group">
-                <div className="bg-slate-900 text-white p-1.5 rounded-lg group-hover:bg-blue-600 transition-colors">
-                  <span className="font-bold text-sm tracking-tighter">2N</span>
+            <div className="flex items-center gap-2 md:gap-8">
+              <Link to="/" className="flex items-center gap-3 group">
+                <div className="bg-slate-900 text-white p-2 rounded-xl group-hover:bg-blue-600 transition-all duration-300 shadow-lg">
+                  <span className="font-bold text-xs tracking-tighter">2N</span>
                 </div>
-                <h1 className="hidden sm:block font-bold text-slate-800 tracking-tight">Gastos 2N</h1>
+                <h1 className="hidden sm:block font-extrabold text-slate-800 tracking-tight text-lg">Gastos 2N</h1>
               </Link>
-              
-              <nav className="hidden md:flex items-center gap-1 ml-4">
-                <NavLinks />
+
+              <nav className="hidden md:flex items-center gap-1">
+                <NavLinks t={t} />
               </nav>
             </div>
 
             <div className="flex items-center gap-3">
+              <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 mr-2">
+                {(['ES', 'EN', 'PT'] as Language[]).map(l => (
+                  <button
+                    key={l}
+                    onClick={() => setLang(l)}
+                    className={`px-3 py-1.5 rounded-lg text-[10px] font-black transition-all ${lang === l ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                  >
+                    {l}
+                  </button>
+                ))}
+              </div>
+
               {user ? (
                 <div className="flex items-center gap-3">
-                  <span className="hidden lg:inline text-xs font-medium text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full border border-slate-200" id="whoami">
+                  <span className="hidden lg:inline text-[10px] font-black uppercase tracking-widest text-slate-400 bg-white/50 px-3 py-1.5 rounded-full border border-slate-200">
                     {user.email}
                   </span>
-                  <button 
-                    onClick={handleLogout} 
-                    id="btnLogout"
-                    className="flex items-center gap-2 text-sm font-semibold text-red-600 hover:bg-red-50 px-3 py-2 rounded-lg transition-colors"
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center gap-2 text-sm font-bold text-red-500 hover:bg-red-50 px-4 py-2 rounded-xl transition-all active:scale-95"
+                    title={t.nav.logout}
                   >
-                    <i className="fa-solid fa-right-from-bracket"></i>
-                    <span className="hidden sm:inline">Salir</span>
+                    <LogOut size={16} />
+                    <span className="hidden sm:inline">{t.nav.logout}</span>
                   </button>
                 </div>
               ) : (
-                <button 
-                  onClick={handleLogin} 
-                  id="btnLogin"
-                  className="bg-blue-600 text-white text-sm font-bold px-4 py-2 rounded-lg shadow-sm hover:bg-blue-700 active:transform active:scale-95 transition-all flex items-center gap-2"
+                <button
+                  onClick={handleLogin}
+                  className="btn-premium btn-premium-primary text-sm"
                 >
-                  <i className="fa-brands fa-google"></i>
-                  <span>Login</span>
+                  <LogIn size={18} />
+                  <span>{t.nav.login}</span>
                 </button>
               )}
             </div>
           </div>
-          
-          {/* MOBILE NAV */}
-          <div className="md:hidden flex items-center justify-around border-t border-slate-100 py-2">
-            <NavLinks />
+
+          {/* MOBILE NAV BOTTOM */}
+          <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[90%] glass-nav rounded-2xl border border-slate-200 shadow-2xl p-2 flex items-center justify-around">
+            <NavLinks t={t} />
           </div>
         </header>
 
         {/* CONTENT */}
-        <main className="flex-1 max-w-7xl mx-auto w-full p-4 md:p-6 lg:p-8">
+        <main className="flex-1 max-w-7xl mx-auto w-full p-4 md:p-8 pb-28 md:pb-8">
           <Routes>
-            <Route path="/" element={<Home user={user} />} />
-            <Route path="/kms" element={<Mileage user={user} />} />
-            <Route path="/export" element={<Export user={user} />} />
-            <Route path="/summary" element={<Summary user={user} />} />
+            <Route path="/" element={<Home user={user} lang={lang} />} />
+            <Route path="/kms" element={<Mileage user={user} lang={lang} />} />
+            <Route path="/summary" element={<Summary user={user} lang={lang} />} />
           </Routes>
         </main>
       </div>
@@ -130,35 +125,34 @@ const App: React.FC = () => {
   );
 };
 
-const NavLinks: React.FC = () => {
+const NavLinks: React.FC<{ t: any }> = ({ t }) => {
   const location = useLocation();
   const linkClass = (path: string) => `
-    flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-all
-    ${location.pathname === path 
-      ? 'bg-blue-50 text-blue-700 shadow-sm border border-blue-100' 
-      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}
+    flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all duration-200
+    ${location.pathname === path
+      ? 'bg-blue-600 text-white shadow-lg shadow-blue-200'
+      : 'text-slate-500 hover:bg-slate-100/50 hover:text-slate-900'}
   `;
 
   return (
     <>
       <Link to="/" className={linkClass('/')}>
-        <i className="fa-solid fa-house"></i>
-        <span>Inicio</span>
+        <LayoutDashboard size={18} />
+        <span className="hidden sm:inline">{t.nav.expenses}</span>
       </Link>
       <Link to="/kms" className={linkClass('/kms')}>
-        <i className="fa-solid fa-car"></i>
-        <span>KM</span>
-      </Link>
-      <Link to="/export" className={linkClass('/export')}>
-        <i className="fa-solid fa-file-export"></i>
-        <span>Export</span>
+        <Car size={18} />
+        <span className="hidden sm:inline">{t.nav.mileage}</span>
       </Link>
       <Link to="/summary" className={linkClass('/summary')}>
-        <i className="fa-solid fa-chart-simple"></i>
-        <span>Summary</span>
+        <BarChart3 size={18} />
+        <span className="hidden sm:inline">{t.nav.summary}</span>
       </Link>
     </>
   );
 };
 
 export default App;
+
+
+
