@@ -160,72 +160,160 @@ const Summary: React.FC<SummaryProps> = ({ user, lang }) => {
 
   const buildPdf = () => {
     try {
-      // Usar la versión global si está disponible para asegurar compatibilidad con autotable
       const { jsPDF } = (window as any).jspdf;
       const doc = new jsPDF();
 
-      doc.setFontSize(22); doc.setTextColor(30, 41, 59);
-      doc.text(`${i18n.report} - ${month}`, 14, 20);
-      doc.setFontSize(10); doc.setTextColor(100, 116, 139);
-      doc.text(`User: ${user?.email || 'Local'}`, 14, 28);
+      // Forced English Strings
+      const L = {
+        title: "2N Expenses - Monthly Summary",
+        monthLabel: "Month:",
+        expSum: "Expenses summary",
+        milSum: "Mileage summary",
+        totalExp: "Total expenses:",
+        paidMe: "Paid with my money:",
+        compOwes: "Company owes me:",
+        compMil: "Company mileage:",
+        persMil: "Personal mileage:",
+        persCost: "Personal mileage cost (km x €/L x 6L/100km):",
+        hDate: "Date",
+        hProvider: "Provider",
+        hCat: "Category",
+        hPaid: "Paid with",
+        hNotes: "Notes",
+        hAmt: "Amount",
+        hType: "Type",
+        hKm: "KM",
+        hFuel: "€/L",
+        hCost: "Personal cost"
+      };
 
+      // Header
+      doc.setFontSize(22); doc.setTextColor(0, 0, 0); doc.setFont("helvetica", "bold");
+      doc.text(L.title, 14, 20);
+      doc.setFontSize(12); doc.setFont("helvetica", "normal"); doc.setTextColor(50, 50, 50);
+      doc.text(`${L.monthLabel} ${month}`, 14, 30);
+
+      // --- Summary Cards Section ---
+      const cardHeight = 35;
+      const cardWidth = 85;
+      const cardY = 40;
+
+      // Expenses Card
+      doc.setDrawColor(200, 200, 200); doc.setFillColor(255, 255, 255);
+      (doc as any).roundedRect(14, cardY, cardWidth, cardHeight, 5, 5, "FD");
+      doc.setTextColor(0, 0, 0); doc.setFontSize(11); doc.setFont("helvetica", "bold");
+      doc.text(L.expSum, 20, cardY + 8);
+      doc.setFontSize(10); doc.setFont("helvetica", "normal");
+      doc.text(`${L.totalExp} ${stats.total.toFixed(2)} €`, 20, cardY + 16);
+      doc.text(`${L.paidMe} ${stats.personal.toFixed(2)} €`, 20, cardY + 22);
+      doc.text(`${L.compOwes} ${companyOwes.toFixed(2)} €`, 20, cardY + 28);
+
+      // Mileage Card
+      (doc as any).roundedRect(110, cardY, cardWidth, cardHeight, 5, 5, "FD");
+      doc.setFont("helvetica", "bold");
+      doc.text(L.milSum, 116, cardY + 8);
+      doc.setFontSize(10); doc.setFont("helvetica", "normal");
+      doc.text(`${L.compMil} ${stats.kmEmp.toFixed(1)} km`, 116, cardY + 16);
+      doc.text(`${L.persMil} ${stats.kmPer.toFixed(1)} km`, 116, cardY + 22);
+      doc.text(`${L.persCost} ${stats.kmCostPer.toFixed(2)} €`, 116, cardY + 28);
+
+      // --- Expenses Table ---
       (doc as any).autoTable({
-        startY: 40,
-        head: [[i18n.date, i18n.provider, i18n.category, i18n.pay, i18n.amount]],
+        startY: 85,
+        head: [[L.hDate, L.hProvider, L.hCat, L.hPaid, L.hNotes, L.hAmt]],
         body: entries.map(e => [
           e.dateJs?.toISOString().slice(0, 10),
           e.provider,
           e.category,
           e.paidWith,
-          `${Number(e.amount).toFixed(2)}€`
+          e.notes || "",
+          `${Number(e.amount).toFixed(2)}`
         ]),
-        headStyles: { fillColor: [30, 41, 59] }
+        headStyles: { fillColor: [0, 0, 0], textColor: [255, 255, 255], fontStyle: "bold" },
+        alternateRowStyles: { fillColor: [245, 245, 245] },
+        styles: { fontSize: 9 }
       });
-      doc.save(`Expenses_${month}_${lang}.pdf`);
+
+      // --- Mileage Table ---
+      const finalY = (doc as any).lastAutoTable.finalY + 10;
+      (doc as any).autoTable({
+        startY: finalY,
+        head: [[L.hDate, L.hType, L.hKm, L.hFuel, L.hCost, L.hNotes]],
+        body: kms.map(k => [
+          k.dateJs?.toISOString().slice(0, 10),
+          String(k.type).toUpperCase(),
+          (k.km || k.distance || 0).toFixed(1),
+          k.fuelPrice?.toFixed(2) || "-",
+          String(k.type).toLowerCase().includes('per') ? stats.kmCostPer.toFixed(2) : "-",
+          k.notes || ""
+        ]),
+        headStyles: { fillColor: [0, 0, 0], textColor: [255, 255, 255], fontStyle: "bold" },
+        alternateRowStyles: { fillColor: [245, 245, 245] },
+        styles: { fontSize: 9 }
+      });
+
+      doc.save(`Expenses_${month}_EN.pdf`);
     } catch (err) {
       console.error("Error generating PDF:", err);
-      alert("Error al generar PDF. Asegúrate de que las librerías están cargadas.");
+      alert("Error generating PDF. Please ensure libraries are loaded.");
     }
   };
 
   const exportExcel = async () => {
-    if (!entries.length) return alert('Empty');
+    if (!entries.length) return alert('Empty data');
     setIsExporting('excel');
     try {
       const XLSX = (window as any).XLSX;
       if (!XLSX) throw new Error("XLSX library not loaded");
 
-      // Ajuste de ruta para la plantilla en GitHub Pages o Local
-      const baseUrl = (import.meta as any).env.BASE_URL || '/';
-      const templateUrl = `${baseUrl.endsWith('/') ? baseUrl : baseUrl + '/'}plantilla-2n.xlsx`;
+      // Forced English
+      const dataRows = [
+        ["2N Expenses - Monthly Summary"],
+        [`Month: ${month}`],
+        [],
+        ["SUMMARY"],
+        ["Total expenses:", stats.total.toFixed(2)],
+        ["Paid with my money:", stats.personal.toFixed(2)],
+        ["Company owes me:", companyOwes.toFixed(2)],
+        ["Company mileage:", stats.kmEmp.toFixed(1)],
+        ["Personal mileage:", stats.kmPer.toFixed(1)],
+        ["Personal mileage cost:", stats.kmCostPer.toFixed(2)],
+        [],
+        ["EXPENSES LIST"],
+        ["Date", "Provider", "Category", "Paid with", "Notes", "Amount"]
+      ];
 
-      const resp = await fetch(templateUrl);
-      if (!resp.ok) throw new Error(`Template not found at ${templateUrl}`);
-
-      const dataArr = await resp.arrayBuffer();
-      const wb = XLSX.read(dataArr, { type: 'array' });
-      const ws = wb.Sheets[wb.SheetNames[0]];
-
-      entries.forEach((e, idx) => {
-        const r = 7 + idx;
-        const setCell = (c: string, v: any, t = 's') => { if (!ws[c + r]) ws[c + r] = {}; ws[c + r].v = v; ws[c + r].t = t; };
-        setCell('A', e.dateJs?.toISOString().slice(0, 10));
-        setCell('B', e.notes ? `${e.provider} - ${e.notes}` : e.provider);
-        const amt = Number(e.amount);
-        const cat = e.category.toLowerCase();
-        let col = 'J';
-        if (cat.includes('peaje')) col = 'C';
-        else if (cat.includes('alojamiento')) col = 'D';
-        else if (cat.includes('gasolina')) col = 'E';
-        else if (cat.includes('transporte')) col = 'G';
-        else if (cat.includes('comida')) col = 'I';
-        setCell(col, amt, 'n'); setCell('K', amt, 'n');
+      entries.forEach(e => {
+        dataRows.push([
+          e.dateJs?.toISOString().slice(0, 10),
+          e.provider,
+          e.category,
+          e.paidWith,
+          e.notes || "",
+          e.amount
+        ]);
       });
 
-      XLSX.writeFile(wb, `Report_${month}_${lang}.xlsx`);
+      dataRows.push([], ["MILEAGE LIST"], ["Date", "Type", "KM", "Fuel Price", "Consumption", "Notes"]);
+      kms.forEach(k => {
+        dataRows.push([
+          k.dateJs?.toISOString().slice(0, 10),
+          k.type,
+          k.km || k.distance || 0,
+          k.fuelPrice || 0,
+          k.consumption || 6.0,
+          k.notes || ""
+        ]);
+      });
+
+      const ws = XLSX.utils.aoa_to_sheet(dataRows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Summary");
+
+      XLSX.writeFile(wb, `Report_${month}_EN.xlsx`);
     } catch (e) {
       console.error("Excel Export Error:", e);
-      alert(`Error al exportar Excel: ${e instanceof Error ? e.message : 'Error desconocido'}`);
+      alert(`Error exporting Excel: ${e instanceof Error ? e.message : 'Unknown error'}`);
     } finally {
       setIsExporting(null);
     }
