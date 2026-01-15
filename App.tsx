@@ -62,7 +62,7 @@ const App: React.FC = () => {
                 <h1 className="hidden sm:block font-extrabold text-slate-800 tracking-tight text-lg">Gastos 2N</h1>
               </Link>
 
-              <nav className="hidden md:flex items-center gap-1">
+              <nav className="flex items-center gap-1">
                 <NavLinks t={t} />
               </nav>
             </div>
@@ -106,14 +106,10 @@ const App: React.FC = () => {
             </div>
           </div>
 
-          {/* MOBILE NAV BOTTOM */}
-          <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[90%] glass-nav rounded-2xl border border-slate-200 shadow-2xl p-2 flex items-center justify-around translate-y-[calc(-1*var(--sab))]">
-            <NavLinks t={t} />
-          </div>
         </header>
 
         {/* CONTENT */}
-        <main className="flex-1 max-w-7xl mx-auto w-full p-4 md:p-8 pb-[calc(100px+var(--sab))] md:pb-8">
+        <main className="flex-1 max-w-7xl mx-auto w-full p-4 md:p-8">
           <Routes>
             <Route path="/" element={<Home user={user} lang={lang} />} />
             <Route path="/kms" element={<Mileage user={user} lang={lang} />} />
@@ -128,7 +124,7 @@ const App: React.FC = () => {
 const NavLinks: React.FC<{ t: any }> = ({ t }) => {
   const location = useLocation();
   const linkClass = (path: string) => `
-    flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all duration-200
+    flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl text-sm font-bold transition-all duration-200
     ${location.pathname === path
       ? 'bg-blue-600 text-white shadow-lg shadow-blue-200'
       : 'text-slate-500 hover:bg-slate-100/50 hover:text-slate-900'}
