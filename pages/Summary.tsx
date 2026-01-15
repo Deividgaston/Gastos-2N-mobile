@@ -136,13 +136,14 @@ const Summary: React.FC<SummaryProps> = ({ user, lang }) => {
         const { id, dateJs, _src, _localIndex, ...data } = editingEntry as any;
         await updateDoc(doc(db, `users/${user.uid}/entries`, id), {
           ...data,
-          date: new Date(data.date)
+          date: dateJs || new Date(data.date)
         });
       }
       setEditingEntry(null);
       fetchMonthData();
     } catch (e) {
-      alert('Error');
+      console.error(e);
+      alert('Error updating: ' + (e as any).message);
     }
   };
 
