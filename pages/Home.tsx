@@ -169,9 +169,9 @@ const Home: React.FC<HomeProps> = ({ user, lang }) => {
       setResizedBlob(null);
       fetchRecentEntries();
       alert('OK ✅');
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
-      alert('Error');
+      alert('Error al guardar: ' + (e.message || 'Desconocido'));
     } finally {
       setIsSaving(false);
     }
