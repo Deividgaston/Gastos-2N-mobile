@@ -421,10 +421,16 @@ const Summary: React.FC<SummaryProps> = ({ user, lang }) => {
   };
 
   const exportZip = async () => {
-    const withPhotos = entries.filter(e => e.photoPath || (e.photoURL && e.photoURL.startsWith('blob:')));
-    if (!withPhotos.length) return alert('No there are no photos to download for this month.');
+    // Include all entries that have any type of photo reference
+    const withPhotos = entries.filter(e => e.photoPath || e.photoURL);
+
+    if (!withPhotos.length) {
+      return alert(lang === 'ES' ? 'No hay fotos para descargar en este mes.' : 'No photos to download for this month.');
+    }
 
     setIsExporting('zip');
+    let successCount = 0;
+
     try {
       const JSZip = (window as any).JSZip;
       if (!JSZip) throw new Error("JSZip library not loaded");
@@ -432,29 +438,46 @@ const Summary: React.FC<SummaryProps> = ({ user, lang }) => {
       const zip = new JSZip();
       const folder = zip.folder(`Tickets_${month}`);
 
-      for (const e of withPhotos) {
+      console.log(`Starting ZIP export for ${withPhotos.length} photos...`);
+
+      for (let i = 0; i < withPhotos.length; i++) {
+        const e = withPhotos[i];
         try {
-          let blob: Blob;
+          let blob: Blob | null = null;
+          let downloadUrl = e.photoURL || '';
+
+          // 1. If we have photoPath, get a fresh download URL (most reliable)
           if (e.photoPath) {
-            // Firebase Storage
-            const url = await getDownloadURL(ref(storage, e.photoPath));
-            const resp = await fetch(url);
-            blob = await resp.blob();
-          } else if (e.photoURL && e.photoURL.startsWith('blob:')) {
-            // Local Blob
-            const resp = await fetch(e.photoURL);
-            blob = await resp.blob();
-          } else {
-            continue;
+            try {
+              downloadUrl = await getDownloadURL(ref(storage, e.photoPath));
+            } catch (err) {
+              console.warn(`Could not get download URL for ${e.photoPath}`, err);
+            }
           }
 
-          const fileName = `${e.dateJs?.toISOString().slice(0, 10)}_${e.provider || 'ticket'}_${Math.floor(Math.random() * 1000)}.jpg`;
-          folder.file(fileName, blob);
+          if (!downloadUrl) continue;
+
+          // 2. Fetch the actual image data
+          const resp = await fetch(downloadUrl);
+          if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+          blob = await resp.blob();
+
+          if (blob) {
+            const dateStr = e.dateJs ? e.dateJs.toISOString().slice(0, 10) : (typeof e.date === 'string' ? e.date.slice(0, 10) : 'unknown');
+            const fileName = `${dateStr}_${(e.provider || 'ticket').replace(/[^a-z0-9]/gi, '_')}_${i + 1}.jpg`;
+            folder.file(fileName, blob);
+            successCount++;
+          }
         } catch (err) {
-          console.warn(`Error fetching photo for ${e.provider}:`, err);
+          console.error(`Error processing photo ${i + 1} (${e.provider}):`, err);
         }
       }
 
+      if (successCount === 0) {
+        throw new Error(lang === 'ES' ? "No se pudo descargar ninguna imagen (Problema de conexión o CORS)" : "Could not download any images (Connection or CORS issue)");
+      }
+
+      console.log(`ZIP ready with ${successCount} images. Generating file...`);
       const content = await zip.generateAsync({ type: 'blob' });
       const link = document.createElement('a');
       link.href = URL.createObjectURL(content);
@@ -462,9 +485,15 @@ const Summary: React.FC<SummaryProps> = ({ user, lang }) => {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-    } catch (e) {
+
+      if (successCount < withPhotos.length) {
+        alert(lang === 'ES'
+          ? `ZIP generado con éxito, pero faltaron ${withPhotos.length - successCount} imágenes que no se pudieron descargar.`
+          : `ZIP generated, but ${withPhotos.length - successCount} images failed to download.`);
+      }
+    } catch (e: any) {
       console.error("ZIP Export Error:", e);
-      alert(`Export failed: ${e instanceof Error ? e.message : 'Unknown error'}`);
+      alert(e.message || 'Error generating ZIP');
     } finally {
       setIsExporting(null);
     }
