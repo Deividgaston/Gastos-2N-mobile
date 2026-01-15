@@ -18,61 +18,77 @@ const App: React.FC = () => {
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (u) => {
-      if (u && u.email) {
-        // Check whitelist
-        try {
-          const qAll = query(collection(db, 'whitelisted_users'), limit(1));
-          const allSnap = await getDocs(qAll);
-
-          if (allSnap.empty) {
-            // BOOTSTRAP: First user becomes Admin
-            await addDoc(collection(db, 'whitelisted_users'), {
-              email: u.email.toLowerCase(),
-              isAdmin: true,
-              isWhitelisted: true,
-              createdAt: new Date()
-            });
-            setUser({ uid: u.uid, email: u.email, isAdmin: true, isWhitelisted: true });
-            setIsAuthorized(true);
-            setLoading(false); // Set loading to false here as well
-            return;
-          }
-
-          const q = query(
-            collection(db, 'whitelisted_users'),
-            where('email', '==', u.email.toLowerCase()),
-            limit(1)
-          );
-          const snap = await getDocs(q);
-
-          if (!snap.empty) {
-            const data = snap.docs[0].data();
-            setUser({
-              uid: u.uid,
-              email: u.email,
-              isAdmin: data.isAdmin,
-              isWhitelisted: data.isWhitelisted
-            });
-            setIsAuthorized(true);
-          } else {
-            // First time bootstrap: if we want to allow the first user to be admin
-            // For now, if not in whitelist, they are not authorized
-            setUser({ uid: u.uid, email: u.email });
-            setIsAuthorized(false);
-          }
-        } catch (err) {
-          console.error("Auth error:", err);
-          setIsAuthorized(false);
-        }
+    const unsubscribe = onAuthStateChanged(auth, (u) => {
+      if (u) {
+        setUser({ uid: u.uid, email: u.email || '' });
       } else {
         setUser(null);
         setIsAuthorized(null);
+        setLoading(false);
       }
-      setLoading(false);
     });
     return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    const checkAuthorization = async () => {
+      if (!user || !user.email) return;
+
+      try {
+        // 1. Check if ANY user exists (Bootstrap check)
+        const qAll = query(collection(db, 'whitelisted_users'), limit(1));
+        const allSnap = await getDocs(qAll);
+
+        if (allSnap.empty) {
+          // Initialize first user as admin
+          await addDoc(collection(db, 'whitelisted_users'), {
+            email: user.email.toLowerCase(),
+            isAdmin: true,
+            isWhitelisted: true,
+            createdAt: new Date()
+          });
+          setUser(prev => prev ? { ...prev, isAdmin: true, isWhitelisted: true } : null);
+          setIsAuthorized(true);
+          setLoading(false);
+          return;
+        }
+
+        // 2. Check current user
+        const q = query(
+          collection(db, 'whitelisted_users'),
+          where('email', '==', user.email.toLowerCase()),
+          limit(1)
+        );
+        const snap = await getDocs(q);
+
+        if (!snap.empty) {
+          const data = snap.docs[0].data();
+          setUser(prev => prev ? {
+            ...prev,
+            isAdmin: data.isAdmin,
+            isWhitelisted: data.isWhitelisted
+          } : null);
+          setIsAuthorized(true);
+        } else {
+          setIsAuthorized(false);
+        }
+      } catch (err: any) {
+        console.error("Auth check error:", err);
+        // If it's a permission error, it might be because the collection is empty but rules block reading it
+        // and we can't bootstrap. For now, assume unauthorized but alert the error.
+        if (err.code === 'permission-denied') {
+          console.warn("Permission denied. Ensure Firestore rules allow initial read/write or collection exists.");
+        }
+        setIsAuthorized(false);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (user) {
+      checkAuthorization();
+    }
+  }, [user]);
 
   const handleLogin = async () => {
     const provider = new GoogleAuthProvider();
