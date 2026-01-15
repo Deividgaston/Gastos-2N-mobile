@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { HashRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
-import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
+import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth, db } from './firebase-init';
 import { collection, query, where, getDocs, limit, addDoc } from 'firebase/firestore';
 import Home from './pages/Home';
@@ -8,7 +8,7 @@ import Mileage from './pages/Mileage';
 import Summary from './pages/Summary';
 import Admin from './pages/Admin';
 import { User } from './types';
-import { LogOut, LogIn, LayoutDashboard, Car, BarChart3, ShieldCheck } from 'lucide-react';
+import { LogOut, LogIn, LayoutDashboard, Car, BarChart3, ShieldCheck, Mail } from 'lucide-react';
 import { translations, Language } from './utils/translations';
 
 const App: React.FC = () => {
@@ -16,6 +16,10 @@ const App: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [lang, setLang] = useState<Language>('ES');
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isRegistering, setIsRegistering] = useState(false);
+  const [showEmailLogin, setShowEmailLogin] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (u) => {
@@ -103,7 +107,28 @@ const App: React.FC = () => {
     try {
       await signInWithPopup(auth, provider);
     } catch (err: any) {
-      alert('Error login: ' + (err.message || ''));
+      if (err.code !== 'auth/popup-closed-by-user') {
+        alert('Error login: ' + (err.message || ''));
+      }
+    }
+  };
+
+  const handleEmailAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !password) return alert('Email & Password required');
+
+    try {
+      setLoading(true);
+      if (isRegistering) {
+        await createUserWithEmailAndPassword(auth, email, password);
+      } else {
+        await signInWithEmailAndPassword(auth, email, password);
+      }
+      setShowEmailLogin(false);
+    } catch (err: any) {
+      alert('Auth Error: ' + err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -118,6 +143,107 @@ const App: React.FC = () => {
   }
 
   const t = translations[lang];
+
+  // Login view
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-fixed">
+        <div className="w-full max-w-md space-y-8 animate-fade-in">
+          <div className="text-center space-y-4">
+            <div className="inline-flex bg-slate-900 p-4 rounded-3xl shadow-2xl mb-4">
+              <img src="logo.png" alt="2N Logo" className="w-16 h-16 object-contain" />
+            </div>
+            <h2 className="text-3xl font-black text-slate-900 tracking-tight">Gastos 2N</h2>
+            <p className="text-slate-500 font-medium tracking-wide uppercase text-[10px]">Cloud Expenses Management System</p>
+          </div>
+
+          <div className="premium-card p-8 space-y-6">
+            {!showEmailLogin ? (
+              <div className="space-y-4">
+                <button
+                  onClick={handleLogin}
+                  className="w-full btn-premium py-4 bg-white border border-slate-200 text-slate-900 hover:bg-slate-50 flex items-center justify-center gap-3"
+                >
+                  <img src="https://www.google.com/favicon.ico" className="w-5 h-5" alt="Google" />
+                  <span className="font-bold">Continue with Google</span>
+                </button>
+
+                <div className="relative py-4">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-slate-100"></div>
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase text-slate-400 font-black">
+                    <span className="bg-white px-4">OR</span>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => setShowEmailLogin(true)}
+                  className="w-full btn-premium py-4 bg-slate-900 text-white hover:bg-slate-800 flex items-center justify-center gap-3 shadow-xl"
+                >
+                  <Mail size={20} />
+                  <span className="font-bold">Use Email & Password</span>
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleEmailAuth} className="space-y-4 animate-slide-up">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Email Address</label>
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-blue-500 outline-none"
+                    placeholder="name@company.com"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Password</label>
+                  <input
+                    type="password"
+                    required
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-blue-500 outline-none"
+                    placeholder="••••••••"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full btn-premium py-4 bg-blue-600 text-white hover:bg-blue-500 shadow-xl shadow-blue-200"
+                >
+                  <span className="font-bold">{isRegistering ? 'Create Account' : 'Sign In Now'}</span>
+                </button>
+
+                <div className="flex flex-col gap-3 pt-4 border-t border-slate-100 text-center">
+                  <button
+                    type="button"
+                    onClick={() => setIsRegistering(!isRegistering)}
+                    className="text-xs font-black text-blue-600 uppercase tracking-widest"
+                  >
+                    {isRegistering ? 'Already have an account? Log In' : 'Need an account? Register'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowEmailLogin(false)}
+                    className="text-xs font-bold text-slate-400"
+                  >
+                    Go back to social login
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+
+          <p className="text-center text-[10px] text-slate-400 font-medium">
+            Protected by Gastos 2N Security Whitelist System
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   // Unauthorized view
   if (user && isAuthorized === false) {
