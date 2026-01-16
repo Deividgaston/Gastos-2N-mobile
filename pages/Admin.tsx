@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { collection, query, getDocs, addDoc, updateDoc, doc, deleteDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase-init';
-import { UserPlus, ShieldCheck, Mail, Send, Trash2, ShieldAlert, Smartphone, Copy, X } from 'lucide-react';
+import { UserPlus, ShieldCheck, Mail, Send, Trash2, ShieldAlert, Smartphone, Copy, X, Ban, CheckCircle2 } from 'lucide-react';
 
 interface WhitelistedUser {
     id: string;
@@ -65,6 +65,16 @@ const Admin: React.FC = () => {
         try {
             await updateDoc(doc(db, 'whitelisted_users', user.id), {
                 isAdmin: !user.isAdmin
+            });
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const handleToggleWhitelist = async (user: WhitelistedUser) => {
+        try {
+            await updateDoc(doc(db, 'whitelisted_users', user.id), {
+                isWhitelisted: !user.isWhitelisted
             });
         } catch (err) {
             console.error(err);
@@ -243,9 +253,16 @@ ${inviteUrl}`;
                                                     <Copy size={16} />
                                                 </button>
                                                 <button
+                                                    onClick={() => handleToggleWhitelist(u)}
+                                                    className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all ${u.isWhitelisted ? 'bg-orange-50 text-orange-500 hover:bg-orange-500 hover:text-white' : 'bg-green-50 text-green-600 hover:bg-green-600 hover:text-white'}`}
+                                                    title={u.isWhitelisted ? "Inhabilitar Acceso" : "Habilitar Acceso"}
+                                                >
+                                                    {u.isWhitelisted ? <Ban size={16} /> : <CheckCircle2 size={16} />}
+                                                </button>
+                                                <button
                                                     onClick={() => handleDelete(u.id)}
                                                     className="w-9 h-9 flex items-center justify-center rounded-xl bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-all shadow-sm"
-                                                    title="Revoke Authorization"
+                                                    title="Borrar Definitivamente"
                                                 >
                                                     <Trash2 size={16} />
                                                 </button>

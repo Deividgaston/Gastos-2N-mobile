@@ -103,7 +103,14 @@ const App: React.FC = () => {
             isAdmin: data.isAdmin,
             isWhitelisted: data.isWhitelisted
           } : null);
-          setIsAuthorized(true);
+
+          // Check explicit flag. If strictly false, deny access.
+          if (data.isWhitelisted === false) {
+            setIsAuthorized(false);
+            alert("Tu cuenta ha sido inhabilitada. Contacta con el administrador.");
+          } else {
+            setIsAuthorized(true);
+          }
         } else {
           setIsAuthorized(false);
         }
