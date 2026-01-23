@@ -20,9 +20,9 @@ const Home: React.FC<HomeProps> = ({ user, lang }) => {
   const t = translations[lang].home;
   const [entries, setEntries] = useState<ExpenseEntry[]>([]);
   const [showReviewModal, setShowReviewModal] = useState(false);
-  const [formData, setFormData] = useState<ExpenseEntry>({
+  const [formData, setFormData] = useState<any>({
     date: new Date().toISOString().slice(0, 10),
-    amount: 0,
+    amount: '',
     provider: '',
     category: 'varios',
     paidWith: 'empresa',
@@ -99,7 +99,7 @@ const Home: React.FC<HomeProps> = ({ user, lang }) => {
           model: 'gemini-2.5-flash',
           contents: {
             parts: [
-              { text: 'Extrae proveedor, fecha (YYYY-MM-DD), categoría (comida, peajes, gasolina, transporte, alojamiento, ocio, servicios, varios o ingreso) e importe total EUR de este ticket.' },
+              { text: 'Extrae proveedor, fecha (YYYY-MM-DD), categoría (comida, peajes, gasolina, transporte, alojamiento, ocio, servicios, varios o ingreso) e importe total en EUR. IMPORTANTE: Si el ticket está en otra moneda (ej: CZK, USD, GBP), DEBES CONVERTIRLO A EUROS (EUR) aplicando un tipo de cambio de mercado aproximado.' },
               { inlineData: { mimeType: file.type, data: b64 } }
             ]
           },
@@ -155,6 +155,7 @@ const Home: React.FC<HomeProps> = ({ user, lang }) => {
       if (user) {
         await addDoc(collection(db, `users/${user.uid}/entries`), {
           ...formData,
+          amount: parseFloat(formData.amount),
           date: new Date(formData.date),
           createdAt: serverTimestamp(),
           photoPath,
@@ -203,7 +204,7 @@ const Home: React.FC<HomeProps> = ({ user, lang }) => {
           <button
             onClick={() => {
               setPreviewUrl('');
-              setFormData({ date: new Date().toISOString().slice(0, 10), amount: 0, provider: '', category: 'varios', paidWith: 'empresa', notes: '' });
+              setFormData({ date: new Date().toISOString().slice(0, 10), amount: '', provider: '', category: 'varios', paidWith: 'empresa', notes: '' });
               setShowReviewModal(true);
             }}
             className="group flex flex-col items-center justify-center gap-3 p-5 bg-white border border-slate-200 hover:border-blue-200 hover:bg-blue-50/30 text-slate-800 rounded-2xl transition-all active:scale-95"
@@ -309,7 +310,7 @@ const Home: React.FC<HomeProps> = ({ user, lang }) => {
                     step="0.01"
                     inputMode="decimal"
                     value={formData.amount}
-                    onChange={(e) => setFormData(prev => ({ ...prev, amount: parseFloat(e.target.value) }))}
+                    onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
                     className="input-premium font-black text-blue-600 text-lg py-2"
                   />
                 </div>
