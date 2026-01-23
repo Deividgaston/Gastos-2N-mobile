@@ -9,7 +9,7 @@ import { Camera, Plus, History, Clock, Tag, CreditCard, ChevronRight, Loader2, I
 import { resizeImage } from '../utils/image-utils';
 import { translations, Language } from '../utils/translations';
 
-const ai = new GoogleGenAI({ apiKey: 'AIzaSyAqz4CmXYTHO1jbm8SYtwSBcjQKoMqKZ9Y' });
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
 
 interface HomeProps {
   user: User | null;
